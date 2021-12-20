@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!--
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this template
+-->
+<!DOCTYPE html>
+<html>
+    <head>
+    <meta charset="utf-8">
+        <title>My first three.js app</title>
+        <style>
+            body{
+                margin: 0;
+                overflow: hidden;
+            }
+	</style>
+    </head>
+    <body>
+        <script type="x-shader/x-vertex" id="vertexShader">
+            
+            varying vec2 vertexUV;
+     
+            
+            void main(){
+                vertexUV = uv;
+                gl_Position = projectionMatrix * 
+                        modelViewMatrix * vec4(position, 1.0);
+      
+            }
+    
+        </script>
+        <script type="x-shader/x-vertex" id="fragmentShader">
+            uniform sampler2D grassTexture;
+            uniform vec4 color;
+            uniform vec3 diffuse;
+            uniform float opacity;
+            varying vec2 vertexUV;
+            
+            
+            void main(){                
+                /*if(color == vec4(0,0,0,0))
+                    gl_FragColor = texture2D( grassTexture, vertexUV );
+                else
+                    gl_FragColor = color; */
+                gl_FragColor = vec4( diffuse, opacity );
+            }
+        </script>
+        <script type="x-shader/x-vertex" id="vertexShader2">
+            /*varying vec3 vWorldPosition;
+
+            void main() {
+
+                vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
+		vWorldPosition = worldPosition.xyz;
+
+		gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+            } */
+                        
+            varying vec3 fPos;
+            varying vec3 fNorm;
+            
+            void main(){
+                fPos = (modelMatrix * vec4(position, 1.0)).xyz;
+                fNorm = (modelMatrix * vec4(normal, 0.0)).xyz;
+                gl_Position = projectionMatrix * 
+                        modelViewMatrix * vec4(position, 1.0);  
+            }
+    
+        </script>
+        <script type="x-shader/x-vertex" id="fragmentShader2">
+            /*uniform vec3 topColor;
+            uniform vec3 bottomColor;
+            uniform float offset;
+            uniform float exponent;
+
+            varying vec3 vWorldPosition;
+
+            void main() {
+                float h = normalize( vWorldPosition + offset ).y;
+		gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h, 0.0 ), exponent ), 0.0 ) ), 1.0 );
+            }*/
+            uniform vec3 pointLightPosition;
+            uniform vec4 meshColor;
+            
+            varying vec3 fPos;
+            varying vec3 fNorm;
+            void main(){
+                vec3 toLightNormal = normalize(pointLightPosition - fPos);
+                float lightIntensity = 0.6 + 0.4 * max(dot(fNorm, toLightNormal), 0.0);
+                gl_FragColor = vec4(meshColor.rgb * lightIntensity, meshColor.a);
+            }
+            
+        </script>
+         <!--   <script type="text/javascript" src="Libs/three.min.js" ></script>
+          
+            <script type="text/javascript" src="Libs/MTLLoader.js" ></script>
+            <script type="text/javascript" src="Libs/OBJLoader.js" ></script> -->
+        
+        <script type="module" src="js/main_yedek.js"></script>
+        <script src="shaders/ShadowShader.js"></script>
+        
+    </body>
+</html>
