@@ -107,6 +107,340 @@ function main(){
       dithering: true,
     });
 
+    //-----------------NEW SHADER TEST STARTS-------------------------------------------------------------------------//
+
+    //BlandMap shader (Needs textures)
+    // var texture = new THREE.TextureLoader().load( "./img/grass.jpg" );
+    // console.log(texture);
+    //
+    // var testBox = CreateGround();
+    // scene.add(testBox);
+    // sceneObjects.push(testBox);
+    // Creates the ground
+    // function CreateGround(material) {
+    //     var uniforms = THREE.UniformsUtils.merge([
+    //         THREE.UniformsLib["common"],
+    //         THREE.UniformsLib["aomap"],
+    //         THREE.UniformsLib["lightmap"],
+    //         THREE.UniformsLib["emissivemap"],
+    //         THREE.UniformsLib["bumpmap"],
+    //         THREE.UniformsLib["normalmap"],
+    //         THREE.UniformsLib["displacementmap"],
+    //         THREE.UniformsLib["gradientmap"],
+    //         THREE.UniformsLib["fog"],
+    //         THREE.UniformsLib["lights"],
+    //         {
+    //             emissive: { type: "c", value: new THREE.Color(0x000000) },
+    //             specular: { type: "c", value: new THREE.Color(0x111111) },
+    //             shininess: { type: "f", value: 30 },
+    //
+    //             TextureBackground: { type: "t", value: null },
+    //             TextureR: { type: "t", value: null },
+    //             TextureG: { type: "t", value: null },
+    //             TextureB: { type: "t", value: null },
+    //             TextureBlendMap: { type: "t", value: null },
+    //         }]);
+    //
+    //     var shaderMaterial;
+    //     try {
+    //         shaderMaterial = new THREE.ShaderMaterial({
+    //             lights: true,
+    //             uniforms: uniforms,
+    //             vertexShader: BlendMapVertexShader,
+    //             fragmentShader: BlendMapFragmentShader
+    //         });
+    //     } catch (e) {
+    //         alert("Error 'CreateGround' : GPU Shader couldn't compile");
+    //     }
+    //
+    //     // shaderMaterial.uniforms.TextureBlendMap.value = _TextureBlendMap;
+    //     // shaderMaterial.uniforms.TextureBackground.value = _TextureSand;
+    //     // shaderMaterial.uniforms.TextureR.value = _TextureClay;
+    //     // shaderMaterial.uniforms.TextureG.value = _TextureClay;
+    //     // shaderMaterial.uniforms.TextureB.value = _TextureRock;
+    //
+    //     var geometry = new THREE.BoxGeometry(2, 2, 2);
+    //     var mesh = new THREE.Mesh(geometry, shaderMaterial);
+    //
+    //     mesh.castShadow = true;
+    //     mesh.receiveShadow = true;
+    //     mesh.geometry.y += 0.5;
+    //     mesh.geometry.x += 5;
+    //
+    //     return mesh;
+    // }
+    //
+    // const BlendMapVertexShader = [
+    //     "#define PHONG",
+    //
+    //     "varying vec3 vViewPosition;",
+    //     "varying vec2 vUv;",
+    //
+    //     "#ifndef FLAT_SHADED",
+    //
+    //     "varying vec3 vNormal;",
+    //
+    //     "#endif",
+    //
+    //
+    //     THREE.ShaderChunk["common"],
+    //     THREE.ShaderChunk["uv_pars_vertex"],
+    //     THREE.ShaderChunk["uv2_pars_vertex"],
+    //     THREE.ShaderChunk["displacementmap_pars_vertex"],
+    //     THREE.ShaderChunk["envmap_pars_vertex"],
+    //     THREE.ShaderChunk["color_pars_vertex"],
+    //     THREE.ShaderChunk["morphtarget_pars_vertex"],
+    //     THREE.ShaderChunk["skinning_pars_vertex"],
+    //     THREE.ShaderChunk["shadowmap_pars_vertex"],
+    //     THREE.ShaderChunk["logdepthbuf_pars_vertex"],
+    //     THREE.ShaderChunk["clipping_planes_pars_vertex"],
+    //
+    //     "void main() {",
+    //     THREE.ShaderChunk["uv_vertex"],
+    //     THREE.ShaderChunk["uv2_vertex"],
+    //     THREE.ShaderChunk["color_vertex"],
+    //
+    //     THREE.ShaderChunk["beginnormal_vertex"],
+    //     THREE.ShaderChunk["morphnormal_vertex"],
+    //     THREE.ShaderChunk["skinbase_vertex"],
+    //     THREE.ShaderChunk["skinnormal_vertex"],
+    //     THREE.ShaderChunk["defaultnormal_vertex"],
+    //
+    //     "#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED",
+    //
+    //     "vNormal = normalize( transformedNormal );",
+    //
+    //     "#endif",
+    //     THREE.ShaderChunk["begin_vertex"],
+    //     THREE.ShaderChunk["displacementmap_vertex"],
+    //     THREE.ShaderChunk["morphtarget_vertex"],
+    //     THREE.ShaderChunk["skinning_vertex"],
+    //     THREE.ShaderChunk["project_vertex"],
+    //     THREE.ShaderChunk["logdepthbuf_vertex"],
+    //     THREE.ShaderChunk["clipping_planes_vertex"],
+    //
+    //     "vUv = uv;",
+    //     "vViewPosition = - mvPosition.xyz;",
+    //
+    //     THREE.ShaderChunk["worldpos_vertex"],
+    //     THREE.ShaderChunk["envmap_vertex"],
+    //     THREE.ShaderChunk["shadowmap_vertex"],
+    //
+    //     "}",
+    // ].join("\n");
+    //
+    // const BlendMapFragmentShader = [
+    //     "#define PHONG",
+    //
+    //     "varying vec2 vUv;",
+    //
+    //     "uniform vec3 diffuse;",
+    //     "uniform vec3 emissive;",
+    //     "uniform vec3 specular;",
+    //     "uniform float shininess;",
+    //     "uniform float opacity;",
+    //
+    //     "uniform sampler2D TextureBlendMap;",
+    //     "uniform sampler2D TextureBackground;",
+    //     "uniform sampler2D TextureR;",
+    //     "uniform sampler2D TextureG;",
+    //     "uniform sampler2D TextureB;",
+    //
+    //     THREE.ShaderChunk["common"],
+    //     THREE.ShaderChunk["packing"],
+    //     THREE.ShaderChunk["color_pars_fragment"],
+    //     THREE.ShaderChunk["uv_pars_fragment"],
+    //     THREE.ShaderChunk["uv2_pars_fragment"],
+    //     THREE.ShaderChunk["map_pars_fragment"],
+    //     THREE.ShaderChunk["alphamap_pars_fragment"],
+    //     THREE.ShaderChunk["aomap_pars_fragment"],
+    //     THREE.ShaderChunk["lightmap_pars_fragment"],
+    //     THREE.ShaderChunk["emissivemap_pars_fragment"],
+    //     THREE.ShaderChunk["envmap_pars_fragment"],
+    //     THREE.ShaderChunk["fog_pars_fragment"],
+    //     THREE.ShaderChunk["bsdfs"],
+    //     THREE.ShaderChunk["lights_pars"],
+    //     THREE.ShaderChunk["lights_phong_pars_fragment"],
+    //     THREE.ShaderChunk["shadowmap_pars_fragment"],
+    //     THREE.ShaderChunk["bumpmap_pars_fragment"],
+    //     THREE.ShaderChunk["normalmap_pars_fragment"],
+    //     THREE.ShaderChunk["specularmap_pars_fragment"],
+    //     THREE.ShaderChunk["logdepthbuf_pars_fragment"],
+    //     THREE.ShaderChunk["clipping_planes_pars_fragment"],
+    //
+    //     "void main() {",
+    //
+    //     THREE.ShaderChunk["clipping_planes_fragment"],
+    //     "// THIS IS CUSTOM CODE TO OVERRIDE THE DIFFUSE COLOR WITH BLENDMAP TEXTURES",
+    //     "vec4 cBlend = texture2D(TextureBlendMap, vUv);",
+    //     "float bText = 1.0 - (cBlend.r + cBlend.g + cBlend.b);",
+    //     "vec2 tiledCoords = vUv * 40.0;",
+    //     "vec4 cBack = texture2D(TextureBackground, tiledCoords) * bText;",
+    //     "vec4 cR = texture2D(TextureR, tiledCoords) * cBlend.r;",
+    //     "vec4 cG = texture2D(TextureG, tiledCoords) * cBlend.g;",
+    //     "vec4 cB = texture2D(TextureB, tiledCoords) * cBlend.b;",
+    //     "vec4 cTot = cBack + cR + cG + cB;",
+    //
+    //     "vec4 diffuseColor = vec4( diffuse, opacity );",
+    //     "diffuseColor.r = cTot.r;",
+    //     "diffuseColor.g = cTot.g;",
+    //     "diffuseColor.b = cTot.b;",
+    //     "ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );",
+    //     "vec3 totalEmissiveRadiance = emissive;",
+    //
+    //     THREE.ShaderChunk["logdepthbuf_fragment"],
+    //     THREE.ShaderChunk["map_fragment"],
+    //     THREE.ShaderChunk["color_fragment"],
+    //     THREE.ShaderChunk["alphamap_fragment"],
+    //     THREE.ShaderChunk["alphatest_fragment"],
+    //     THREE.ShaderChunk["specularmap_fragment"],
+    //     THREE.ShaderChunk["normal_flip"],
+    //     THREE.ShaderChunk["normal_fragment"],
+    //     THREE.ShaderChunk["emissivemap_fragment"],
+    //
+    //     "// accumulation",
+    //     THREE.ShaderChunk["lights_phong_fragment"],
+    //     THREE.ShaderChunk["lights_template"],
+    //
+    //     "// modulation",
+    //     THREE.ShaderChunk["aomap_fragment"],
+    //
+    //     "vec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;",
+    //
+    //     THREE.ShaderChunk["envmap_fragment"],
+    //
+    //     "gl_FragColor = vec4( outgoingLight, diffuseColor.a );",
+    //
+    //     THREE.ShaderChunk["premultiplied_alpha_fragment"],
+    //     THREE.ShaderChunk["tonemapping_fragment"],
+    //     THREE.ShaderChunk["encodings_fragment"],
+    //     THREE.ShaderChunk["fog_fragment"],
+    //     "}",
+    // ].join("\n");
+
+    //twist material, modified phong shader (reflects lights, receives shadows)
+    //amount = altitude of the motion
+    //time = variant of the motion (time passed is a consistent landslide like, Math.random() is a earthquake like)
+    function buildTwistMaterial( amount, time ) {
+        const material2 = new THREE.MeshPhongMaterial({
+            color: new THREE.Color(0x743E0C) //soil color
+        });
+
+        material2.onBeforeCompile = function ( shader ) {
+            shader.uniforms.time = { value: time };
+
+            shader.vertexShader = 'uniform float time;\n' + shader.vertexShader;
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <begin_vertex>',
+                [
+                    `float theta = sin( time + position.y ) / ${ amount.toFixed( 1 ) };`,
+                    'float c = cos( theta );',
+                    'float s = sin( theta );',
+                    'mat3 m = mat3( c, 0, s, 0, 1, 0, -s, 0, c );',
+                    'vec3 transformed = vec3( position ) * m;',
+                    'vNormal = vNormal * m;'
+                ].join( '\n' )
+            );
+            material2.userData.shader = shader;
+        };
+
+        // Make sure WebGLRenderer doesnt reuse a single program
+        material2.customProgramCacheKey = function () {
+            return amount;
+        };
+
+        return material2;
+    }
+
+    //soil land block created via buildTwistMaterial
+    var time = 0;
+    var geometry = new THREE.BoxGeometry(2, 2, 2);
+    var soilLand = new THREE.Mesh(geometry, buildTwistMaterial(5, time));
+    soilLand.name = "soilLand";
+    soilLand.userData.draggable = true;
+    soilLand.castShadow = true;
+    soilLand.receiveShadow = true;
+    soilLand.position.y += 1;
+    soilLand.position.z -= 3;
+    soilLand.position.x -= 3;
+    scene.add(soilLand);
+    sceneObjects.push(soilLand);
+
+    //custom phong shader (reflects light, no shadows)
+    //
+    function CustomPhongShader(Ka, Kd, Ks, LInt, LPos, S) {
+        return new THREE.ShaderMaterial({
+            uniforms: {
+                Ka: {value: Ka}, //object's color
+                Kd: {value: Kd}, //light reflecting surface's color (blends with object's color)
+                Ks: {value: Ks}, //reflected light color
+                LightIntensity: {value: LInt}, //intensity of the light
+                LightPosition: {value: LPos}, //position of the light
+                Shininess: {value: S} //shininess of the object (higher is more focused and metallic)
+            },
+            vertexShader: `
+      varying vec3 Normal;
+      varying vec3 Position;
+
+      void main() {
+        Normal = normalize(normalMatrix * normal);
+        Position = vec3(modelViewMatrix * vec4(position, 1.0));
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+            fragmentShader: `
+      varying vec3 Normal;
+      varying vec3 Position;
+
+      uniform vec3 Ka;
+      uniform vec3 Kd;
+      uniform vec3 Ks;
+      uniform vec4 LightPosition;
+      uniform vec3 LightIntensity;
+      uniform float Shininess;
+
+      vec3 phong() {
+        vec3 n = normalize(Normal);
+        vec3 s = normalize(vec3(LightPosition) - Position);
+        vec3 v = normalize(vec3(-Position));
+        vec3 r = reflect(-s, n);
+
+        vec3 ambient = Ka;
+        vec3 diffuse = Kd * max(dot(s, n), 0.0);
+        vec3 specular = Ks * pow(max(dot(r, v), 0.0), Shininess);
+
+        return LightIntensity * (ambient + diffuse + specular);
+      }
+
+      void main() {
+        gl_FragColor = vec4(phong(), 1.0);
+      }
+    `
+        });
+    }
+
+    //stone cube custom phong shader parameters
+    var Ka = new THREE.Vector3(0.53, 0.55, 0.55); //stone gray color
+    var Kd = new THREE.Vector3(0.55, 0.55, 0.55); //stone gray light reflecting face color
+    var Ks = new THREE.Vector3(0.6, 0.6, 0.6); //reflected light color (gray to white)
+    var lightIntensity = new THREE.Vector4(0.4, 0.4, 0.4, 1.0);
+    var lightPosition = new THREE.Vector4(0.0, 20000.0, 0.0, 1.0);
+    var shininess = 25; //diffusing (unfocused)
+
+    //stone cube block created via CustomPhongShader
+    var angle = 0;
+    var stoneCubeGeometry = new THREE.BoxGeometry(2, 2, 2);
+    var stoneCube = new THREE.Mesh(stoneCubeGeometry, CustomPhongShader(Ka, Kd, Ks, lightIntensity, lightPosition, shininess));
+    stoneCube.userData.draggable = true;
+    stoneCube.castShadow = true;
+    stoneCube.position.y += 1;
+    stoneCube.position.z -= 3;
+    stoneCube.position.x += 3;
+    scene.add(stoneCube);
+    sceneObjects.push(stoneCube);
+
+    //-----------------NEW SHADER TEST ENDS---------------------------------------------------------------------------//
+
 
     // add pine tree to scene
     createPine(new THREE.Vector3( 0, 0, 0 ));
@@ -159,7 +493,21 @@ function main(){
     console.log(basicCustomShaderMaterial.uniforms);
     console.log(basicCustomShaderMaterial.uniforms.color.value);
     var animate = function () {
-        
+
+        //buildTwistMaterial twist test
+        scene.traverse( function ( child ) {
+            if ( child.isMesh && child.name === "soilLand" ) {
+                const shader = child.material.userData.shader;
+                if ( shader ) {
+                    shader.uniforms.time.value = performance.now() / 1000;
+                }
+            }
+        });
+        //rotation test for custom phong shader
+        angle += 0.01;
+        stoneCube.rotation.y = angle;
+
+
         dragObject();
         controls.update();
         renderer.render( scene, camera );
