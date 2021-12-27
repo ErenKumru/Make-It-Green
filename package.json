@@ -9,5 +9,8 @@
         "browser"
     ],
     "author": "User",
-    "contributors": []
+    "contributors": [],
+    "dependencies": {
+        "decision-tree": "^0.3.7"
+    }
 }
