@@ -12,6 +12,7 @@ import { GUI } from './jsm/libs/lil-gui.module.min.js';
 import { OBJLoader } from './jsm/loaders/OBJLoader.js';
 import { MTLLoader } from './jsm/loaders/MTLLoader.js';
 import BasicCustomShader from '../shaders/BasicCustomShader.js'
+import ShadowShader from '../shaders/ShadowShader.js';
 import { OrbitControls } from './jsm/libs/OrbitControls.js';
 
 var camera, scene, renderer;
@@ -443,12 +444,12 @@ function main(){
 
 
     //-----------------DECISION TREE TEST STARTS----------------------------------------------------------------------//
-//Import DecisionTree
+    //Import DecisionTree
     var DecisionTree = require('decision-tree');
 
-//Create training data
-//Test data is compared to this data to check accuracy
-//Predictions are made on this data to give results
+    //Create training data
+    //Test data is compared to this data to check accuracy
+    //Predictions are made on this data to give results
     var training_data = [
         {"color":"blue", "shape":"square", "liked":false},
         {"color":"red", "shape":"square", "liked":false},
@@ -460,7 +461,7 @@ function main(){
         {"color":"yellow", "shape":"circle", "liked":true}
     ];
 
-//Used to check the accuracy of the model
+    //Used to check the accuracy of the model
     var test_data = [
         {"color":"blue", "shape":"hexagon", "liked":false},
         {"color":"red", "shape":"hexagon", "liked":false},
