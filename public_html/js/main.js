@@ -2,11 +2,29 @@ import * as THREE from '../build/three.module.js';
 import { GUI } from './jsm/libs/lil-gui.module.min.js';
 import { OBJLoader } from './jsm/loaders/OBJLoader.js';
 import { MTLLoader } from './jsm/loaders/MTLLoader.js';
+import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
 import BasicCustomShader from '../shaders/BasicCustomShader.js'
 import { OrbitControls } from './jsm/libs/OrbitControls.js';
+import { PointerLockControls } from './jsm/libs/PointerLockControls.js';
 
-var camera, scene, renderer;
-var raycaster, clickMouse, mouseMove, draggable, objectToRotate;
+
+//Enable camera rotation with p button
+//Move camera right-left, forward-backward with arrow keys
+//Move camera up-down with page up-down keys
+let moveForward = false;
+let moveBackward = false;
+let moveLeft = false;
+let moveRight = false;
+let moveUp = false;
+let moveDown = false;
+
+let prevTime = performance.now();
+const velocity = new THREE.Vector3();
+const direction = new THREE.Vector3();
+const vertex = new THREE.Vector3();
+
+var camera, scene, renderer, controls;
+var raycaster, clickMouse, mouseMove, draggable, selectedObject;
 var keyboard={};
 var cameraMovementSpeed = 0.1;
 var pointLight,ambientLight,spotLight,light1,light1Helper;
@@ -19,14 +37,14 @@ function main(){
      
     // SCENES
     scene = new THREE.Scene();
-   
+       
     
     //LIGHTS
     initLights();
        
     //CAMERA
     camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.1, 1000 );
-    camera.position.set(0,1,-10);
+    camera.position.set(0,5,10);
     sceneObjects.push(camera);
     
     
@@ -52,18 +70,24 @@ function main(){
         
         // calculate objects intersecting the picking ray
 	const found = intersect(clickMouse);;
-        if(found.length > 0 && found[0].object.userData.draggable){
+        if(found.length > 0 && found[0].object.parent.userData.draggable){
+            draggable = found[0].object.parent;
+            selectedObject = found[0].object.parent;
+           
+        }
+        /*if(found.length > 0 && found[0].object.userData.draggable){
             console.log(found[0].object.position);
             draggable = found[0].object;
-            objectToRotate = found[0].object;
-            console.log("found draggable " + draggable.userData.name);
-        }
+            selectedObject = found[0].object;
+            console.log("found draggable " + draggable.userData.name); 
+        } */
     });
     window.addEventListener('mousemove', event => {
         mouseMove.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouseMove.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     });
-
+    document.addEventListener( 'wheel', onMouseWheel, false );
+    
     //RENDERER
     renderer = new THREE.WebGLRenderer();
     renderer.setClearColor(0xA6CBD8);
@@ -79,11 +103,15 @@ function main(){
     // Input Panel
     createPanel();
     
-    const controls = new OrbitControls( camera, renderer.domElement );
+  /*  const controls = new OrbitControls( camera, renderer.domElement );
 				controls.maxPolarAngle = 0.9 * Math.PI / 2;
 				controls.enableZoom = true;
-    controls.update();
-
+    
+    controls.update();  */
+    
+    controls = new PointerLockControls( camera, renderer.domElement );
+ 
+    
     const material = new THREE.ShaderMaterial({
         vertexShader: vertexShader3,
         fragmentShader: fragmentShader3,
@@ -107,15 +135,17 @@ function main(){
 
 
     // add pine tree to scene
-    createPine(new THREE.Vector3( 0, 0, 0 ));
+   /*  createPine(new THREE.Vector3( 0, 0, 0 ));
     
     // add cactus to scene
     createCactus(new THREE.Vector3( 1, 0, -1 ));
     createAppleTree(new THREE.Vector3( 1, 0, -2 ));
-    createPoplarTree(new THREE.Vector3( 1, 0, -2 ));
-
+    createPoplarTree(new THREE.Vector3( 1, 0, -2 ));  */
+    appleTreeGLTF(new THREE.Vector3( -5, 1, 2 ));
+    poplarTreeGLTF(new THREE.Vector3( 0, 1, 2 ));
+    pineTreeGLTF(new THREE.Vector3( 2, 1, 2 ));
+    cactusGLTF(new THREE.Vector3( 2, 1, 2 ));
     
-
     // PLANE
     const geometry_plane = new THREE.PlaneBufferGeometry(100, 100, 20, 20);
     const material_plane = new THREE.MeshStandardMaterial({
@@ -135,13 +165,52 @@ function main(){
     
     var animate = function () {
         
-        dragObject();
-        controls.update();
+        //dragObject();
+        const time = performance.now();
+        const delta = ( time - prevTime ) / 10000;
         
+        velocity.x -= velocity.x * 10.0 * delta;
+        velocity.z -= velocity.z * 10.0 * delta;
+        
+        direction.z = Number( moveForward ) - Number( moveBackward );
+        direction.x = Number( moveRight ) - Number( moveLeft );
+        direction.normalize(); // this ensures consistent movements in all directions
+        
+        if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
+	if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
+        
+        controls.moveRight( - velocity.x * delta );
+	controls.moveForward( - velocity.z * delta );
+        
+        
+        prevTime = time;
+    /*    if(moveRight){
+            camera.position.x += 1.0;
+        }
+        if(moveLeft){
+            camera.position.x -= 1.0;
+        }
+        if(moveForward){
+            camera.position.z -= 1.0;
+        }
+        if(moveBackward){
+            camera.position.z += 1.0;
+        }
+        if(moveUp){
+            camera.position.y += 1.0;
+        }
+        if(moveDown){
+            camera.position.y -= 1.0;
+        } */
         requestAnimationFrame( animate );
-        renderer.render( scene, camera );
+        render();
 
     };
+    function render() {
+
+        renderer.render( scene, camera );
+
+    }
 
     animate(); 
 }
@@ -154,42 +223,73 @@ function onWindowResize() {
 }
 
 function keyEvents(){
-       
-        window.addEventListener("keydown", function(event){
-         
-        if(event.key ==	"ArrowRight"){
-            if(draggable != null){
-                rotateAboutXAxis(draggable,0.1);
-            }
-            else{
-                
-            }
+        window.addEventListener("keydown", function(event){ 
+            switch ( event.code ) {
+                case 'ArrowUp':
+		case 'KeyW':
+                    moveForward = true;
+                    break;
+		case 'ArrowLeft':
+		case 'KeyA':
+                    moveLeft = true;
+		    break;
+		case 'ArrowDown':
+		case 'KeyS':
+                    moveBackward = true;
+                    break;
+		case 'ArrowRight':
+		case 'KeyD':
+                    moveRight = true;
+                    break;
+                case 'PageUp':
+                    moveUp = true;
+                    break;
+                case 'PageDown':
+                    moveDown = true;
+                    break;
+                case 'KeyP':
+                    if(!controls.isLocked){
+                        controls.lock();
+                    }
+                    else{
+                        controls.unlock();
+                    }
+                    break;
+                    
         }
-        if(event.key ==	"ArrowLeft"){
-            if(draggable != null){
-                rotateAboutXAxis(draggable,-0.1);
-            }
-            else{
-                
-            }
-        }
-        if(event.key ==	"ArrowUp"){
-            if(draggable != null){
-                rotateAboutYAxis(draggable,0.1);
-            }
-            else{
-                
-            }
-        }
-        if(event.key ==	"ArrowDown"){
-            if(draggable != null){
-                rotateAboutYAxis(draggable,-0.1);
-            }
-            else{
-                
-            }
-        }
+        
     });
+        window.addEventListener("keyup", function(event){
+            switch ( event.code ) {
+
+            case 'ArrowUp':
+            case 'KeyW':
+                moveForward = false;
+                break;
+
+            case 'ArrowLeft':
+            case 'KeyA':
+                    moveLeft = false;
+                    break;
+
+            case 'ArrowDown':
+            case 'KeyS':
+                    moveBackward = false;
+                    break;
+
+            case 'ArrowRight':
+            case 'KeyD':
+                    moveRight = false;
+                    break;
+            case 'PageUp':
+                moveUp = false;
+                break;
+            case 'PageDown':
+                moveDown = false;
+                break;
+
+            }
+        });
 }
 function initLights(){
     // LIGHTS
@@ -234,24 +334,42 @@ function createPanel(){
     panel.add(parameters, 'humidty', 0, 0, 1).name('Humidty');
     panel.add(parameters, 'light', 0, 0, 1).name('Light');
     
-    const rotation = panel.addFolder('Rotate');
-    var rotateAboutXPositiveButton = { rotateAboutXPositive:function(){ rotateAboutXAxis(objectToRotate,0.1); }};
-    rotation.add(rotateAboutXPositiveButton,'rotateAboutXPositive').name("X+");
+    const objectSettings = {
+        'X Rotation':0.0,
+        'Y Rotation':0.0,
+        'Z Rotation':0.0,
+    }
     
-    var rotateAboutXNegativeButton = { rotateAboutXNegative:function(){ rotateAboutXAxis(objectToRotate,-0.1); }};
-    rotation.add(rotateAboutXNegativeButton,'rotateAboutXNegative').name("X-");
+    const object = panel.addFolder('Object Settings');
+    const cameraTilt = panel.addFolder('Camera Rotate Z');
+    // OBJECT ROTATION
+    object.add(objectSettings,'X Rotation',0,Math.PI * 2).onChange( function(val){
+         rotateAboutXAxis(selectedObject,val);
+    });
+    object.add(objectSettings, 'Y Rotation',0,Math.PI * 2).onChange( function(val){
+         rotateAboutYAxis(selectedObject,val);
+    });
+    object.add(objectSettings, 'Z Rotation',0,Math.PI * 2).onChange( function(val){
+         rotateAboutZAxis(selectedObject,val);
+    });
+    object.close();
     
-    var rotateAboutYPositiveButton = { rotateAboutYPositive:function(){ rotateAboutYAxis(objectToRotate,0.1); }};
-    rotation.add(rotateAboutYPositiveButton,'rotateAboutYPositive').name("Y+");
+    // OBJECT TRANSDORM
+    var moveForward = { moveForward:function(){ transformOnY(selectedObject,1); }};
+    object.add(moveForward,'moveForward').name("Move it forward");
+    var moveBackward = { moveBackward:function(){ transformOnY(selectedObject,-1); }};
+    object.add(moveBackward,'moveBackward').name("Move it backward");
+    var moveRight = { moveRight:function(){ transformOnX(selectedObject,1); }};
+    object.add(moveRight,'moveRight').name("Move it right");
+    var moveLeft = { moveLeft:function(){ transformOnX(selectedObject,-1); }};
+    object.add(moveLeft,'moveLeft').name("Move it left");
+    var moveUp = { moveUp:function(){ transformOnZ(selectedObject,-1); }};
+    object.add(moveUp,'moveUp').name("Move it up");
+    var moveDown = { moveDown:function(){ transformOnZ(selectedObject,1); }};
+    object.add(moveDown,'moveDown').name("Move it down");
     
-    var rotateAboutYNegative = { rotateAboutYNegative:function(){ rotateAboutYAxis(objectToRotate,-0.1); }};
-    rotation.add(rotateAboutYNegative,'rotateAboutYNegative').name("Y-");
-    
-     var rotateAboutZPositiveButton = { rotateAboutZPositive:function(){ rotateAboutZAxis(objectToRotate,0.1); }};
-    rotation.add(rotateAboutZPositiveButton,'rotateAboutZPositive').name("Z+");
-    
-    var rotateAboutZNegative = { rotateAboutZNegative:function(){ rotateAboutZAxis(objectToRotate,-0.1); }};
-    rotation.add(rotateAboutZNegative,'rotateAboutZNegative').name("Z-");
+    cameraTilt.add(camera.rotation,"z",0,Math.PI * 2);
+
     
     var obj = { add:function(){ console.log("clicked") }};
     panel.add(obj,'add');
@@ -372,7 +490,7 @@ function createAppleTree(position) {
     }); 
 }
 function createPoplarTree(position) {
-   const objLoader = new OBJLoader();
+    const objLoader = new OBJLoader();
     var mtlLoader = new MTLLoader();
     mtlLoader.load("./models/white_poplar_tree/poplar_tree.mtl", function(materials){
         materials.preload();
@@ -403,35 +521,119 @@ function createPoplarTree(position) {
      
     }); 
 }
+
+// GLTF LOAD FUNCTIONS
+function appleTreeGLTF(position){
+    const loader = new GLTFLoader();
+    loader.load('./models/apple_tree/AppleTree.gltf', function(gltf){
+        const mesh = gltf.scene;
+         // Cast and recieve shadow
+        mesh.traverse( function( node ) {if ( node.isMesh ) { node.castShadow = true; node.receiveShadow = true;}});
+        mesh.children[0].userData.draggable = true;
+        mesh.position.set(position.x, position.y, position.z);
+        sceneObjects.push(mesh);
+        scene.add(mesh);
+        console.log(mesh);
+    });
+}
+function poplarTreeGLTF(position){
+    const loader = new GLTFLoader();
+    loader.load('./models/white_poplar_tree/poplar_tree.gltf', function(gltf){
+        const mesh = gltf.scene;
+         // Cast and recieve shadow
+        mesh.traverse( function( node ) {if ( node.isMesh ) { node.castShadow = true; node.receiveShadow = true;}});
+        mesh.children[0].userData.draggable = true;
+        mesh.position.set(position.x, position.y, position.z);
+        sceneObjects.push(mesh);
+        scene.add(mesh);
+        console.log(mesh);
+    });
+}
+function pineTreeGLTF(position){
+    const loader = new GLTFLoader();
+    loader.load('./models/pine/pine.gltf', function(gltf){
+        const mesh = gltf.scene;
+        // Cast and recieve shadow
+        mesh.traverse( function( node ) {if ( node.isMesh ) { node.castShadow = true; node.receiveShadow = true;}});
+        
+        mesh.children[0].userData.draggable = true;
+        mesh.position.set(position.x, position.y, position.z);
+        sceneObjects.push(mesh);
+        scene.add(mesh);
+        console.log(mesh);
+    });
+}
+function cactusGLTF(position){
+    const loader = new GLTFLoader();
+    loader.load('./models/cactus/cactus.gltf', function(gltf){
+        const mesh = gltf.scene;
+        mesh.children[0].userData.draggable = true;
+        mesh.position.set(position.x, position.y, position.z);
+        sceneObjects.push(mesh);
+        scene.add(mesh);
+        console.log(mesh);
+    });
+}
+
 function rotateAboutXAxis(object, rad){
     if(object != null){
         object.traverse( function (child){
             if ( child instanceof THREE.Mesh ){
-                child.rotateOnAxis(new THREE.Vector3(1,0,0),rad);
+               child.rotation.x = rad;
             }
         });
    }
-   
 }
 function rotateAboutYAxis(object, rad){
     if(object != null){
         object.traverse( function (child){
             if ( child instanceof THREE.Mesh ){
-                child.rotateOnAxis(new THREE.Vector3(0,1,0),rad);
+                 child.rotation.y = rad;
             }
         });
-    }
-    
+    } 
 }
 function rotateAboutZAxis(object, rad){
     if(object != null){
         object.traverse( function (child){
             if ( child instanceof THREE.Mesh ){
-                child.rotateOnAxis(new THREE.Vector3(0,0,1),rad);
+                child.rotation.z = rad;
             }
         });
-    }
-    
+    }  
+}
+
+function transformOnX(object, amount){
+    if(object != null && object.userData.draggable){
+        object.traverse( function (child){
+            if ( child instanceof THREE.Mesh ){
+               child.position.x += amount;
+            }
+        });
+   }
+}
+function transformOnY(object, amount){
+    if(object != null && object.userData.draggable){
+        object.traverse( function (child){
+            if ( child instanceof THREE.Mesh ){
+                 child.position.y += amount;
+            }
+        });
+    } 
+}
+function transformOnZ(object, amount){
+    if(object != null && object.userData.draggable){
+        object.traverse( function (child){
+            if ( child instanceof THREE.Mesh ){
+                child.position.z += amount;
+            }
+        }); 
+    }  
+}
+
+
+function onMouseWheel( event ) {
+  camera.position.z += event.deltaY * 0.01; // move camera along z-axis
 }
 
 main();		
