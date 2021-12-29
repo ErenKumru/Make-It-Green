@@ -70,7 +70,7 @@ function main(){
         raycaster.setFromCamera( clickMouse, camera );
         
         // calculate objects intersecting the picking ray
-	const found = intersect(clickMouse);;
+	const found = intersect(clickMouse);
         if(found.length > 0 && found[0].object.parent.userData.draggable){
             draggable = found[0].object.parent;
             selectedObject = found[0].object.parent;
@@ -542,7 +542,7 @@ function main(){
     createAppleTree(new THREE.Vector3( 1, 0, -2 ));
     createPoplarTree(new THREE.Vector3( 1, 0, -2 ));  */
     appleTreeGLTF(new THREE.Vector3( -5, 1, 2 ));
-    poplarTreeGLTF(new THREE.Vector3( 0, 1, 2 ));
+    // poplarTreeGLTF(new THREE.Vector3( 0, 1, 2 ));
     pineTreeGLTF(new THREE.Vector3( 2, 1, 2 ));
     cactusGLTF(new THREE.Vector3( 2, 1, 2 ));
     
@@ -564,11 +564,10 @@ function main(){
 
     
     var animate = function () {
-        
-        //dragObject();
+
         const time = performance.now();
         const delta = ( time - prevTime ) / 10000;
-        
+
         velocity.x -= velocity.x * 10.0 * delta;
         velocity.z -= velocity.z * 10.0 * delta;
 
@@ -587,22 +586,17 @@ function main(){
         stoneCube.rotation.y = angle;
 
 
-        dragObject();
-        controls.update();
-        renderer.render( scene, camera );
-        requestAnimationFrame( animate );
-        
         direction.z = Number( moveForward ) - Number( moveBackward );
         direction.x = Number( moveRight ) - Number( moveLeft );
         direction.normalize(); // this ensures consistent movements in all directions
-        
+
         if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
 	if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
-        
+
         controls.moveRight( - velocity.x * delta );
 	controls.moveForward( - velocity.z * delta );
-        
-        
+
+
         prevTime = time;
     /*    if(moveRight){
             camera.position.x += 1.0;
@@ -622,13 +616,13 @@ function main(){
         if(moveDown){
             camera.position.y -= 1.0;
         } */
-        requestAnimationFrame( animate );
-        render();
+         requestAnimationFrame( animate );
+         render();
 
     };
-    function render() {
+     function render() {
 
-        renderer.render( scene, camera );
+         renderer.render( scene, camera );
 
     }
 
