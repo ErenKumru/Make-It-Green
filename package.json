@@ -9,5 +9,12 @@
         "browser"
     ],
     "author": "User",
-    "contributors": []
+    "contributors": [],
+    "dependencies": {
+        "browserify": "^17.0.0",
+        "decision-tree": "^0.3.7"
+    },
+    "devDependencies": {
+        "esmify": "^2.1.1"
+    }
 }
