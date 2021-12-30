@@ -86,6 +86,9 @@ function main(){
         mouseMove.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouseMove.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     });
+    
+    // To resize the window
+    window.addEventListener( 'resize', onWindowResize, false );
     document.addEventListener( 'wheel', onMouseWheel, false );
     
     //RENDERER
@@ -980,6 +983,8 @@ function cactusGLTF(position){
     const loader = new GLTFLoader();
     loader.load('./models/cactus/cactus.gltf', function(gltf){
         const mesh = gltf.scene;
+         // Cast and recieve shadow
+        mesh.traverse( function( node ) {if ( node.isMesh ) { node.castShadow = true; node.receiveShadow = true;}});
         mesh.children[0].userData.draggable = true;
         mesh.position.set(position.x, position.y, position.z);
         sceneObjects.push(mesh);
