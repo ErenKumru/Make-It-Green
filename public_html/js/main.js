@@ -470,75 +470,8 @@ function main(){
 
     //-----------------NEW SHADER TEST ENDS---------------------------------------------------------------------------//
 
-
-    //-----------------DECISION TREE TEST STARTS----------------------------------------------------------------------//
-    //Import DecisionTree
-    var DecisionTree = require('decision-tree');
-
-    //Create training data
-    //Test data is compared to this data to check accuracy
-    //Predictions are made on this data to give results
-    var training_data = [
-        {"color":"blue", "shape":"square", "liked":false},
-        {"color":"red", "shape":"square", "liked":false},
-        {"color":"blue", "shape":"circle", "liked":true},
-        {"color":"red", "shape":"circle", "liked":true},
-        {"color":"blue", "shape":"hexagon", "liked":false},
-        {"color":"red", "shape":"hexagon", "liked":false},
-        {"color":"yellow", "shape":"hexagon", "liked":true},
-        {"color":"yellow", "shape":"circle", "liked":true}
-    ];
-
-    //Used to check the accuracy of the model
-    var test_data = [
-        {"color":"blue", "shape":"hexagon", "liked":false},
-        {"color":"red", "shape":"hexagon", "liked":false},
-        {"color":"yellow", "shape":"hexagon", "liked":true},
-        {"color":"yellow", "shape":"circle", "liked":true}
-    ];
-
-    var class_name = "liked";
-
-
-    var features = ["color", "shape"];
-
-    var dt = new DecisionTree(class_name, features);
-
-
-    dt.train(training_data);
-
-
-    var predicted_class = dt.predict({
-        color: "blue",
-        shape: "hexagon"
-    });
-
-
-    var accuracy = dt.evaluate(test_data);
-
-
-    console.log("dt:", dt);
-    console.log("predicted_class:", predicted_class);
-    console.log("Accuracy:", accuracy);
-
-    /* Import/Export trained model
-    //To export (save) trained model for future use
-    var treeJson = dt.toJSON();
-    console.log("treeJson: ", treeJson);
-    //Create a new model
-    var treeJson = dt.toJSON();
-    var preTrainedDecisionTree = new DecisionTree(treeJson);
-    //Alternately, you can also import a previously trained model on an existing tree instance,
-    assuming the features & class are the same:
-    var treeJson = dt.toJSON();
-    dt.import(treeJson);
-    */
-
-
-    //-----------------DECISION TREE TEST ENDS------------------------------------------------------------------------//
-
     // add pine tree to scene
-   /*  createPine(new THREE.Vector3( 0, 0, 0 ));
+    /*  createPine(new THREE.Vector3( 0, 0, 0 ));
     
     // add cactus to scene
     createCactus(new THREE.Vector3( 1, 0, -1 ));
@@ -720,20 +653,124 @@ function initLights(){
     sceneObjects.push(spotLight);
 }
 
+//-----------------DECISION TREE TEST STARTS----------------------------------------------------------------------//
+//Import DecisionTree
+var DecisionTree = require('decision-tree');
+
+//Create training data
+//Test data is compared to this data to check accuracy
+//Predictions are made on this data to give results
+var training_data = [
+    {"temperature": "cold", "water": "wet", "tree": "Apple"},
+    {"temperature": "cold", "water": "dry", "tree": "Pine"},
+    {"temperature": "warm", "water": "dry", "tree": "Cactus"},
+    {"temperature": "warm", "water": "wet", "tree": "Poplar"},
+];
+
+//Used to check the accuracy of the model
+var test_data = [
+    {"temperature": "cold", "water": "wet", "tree": "Apple"},
+    {"temperature": "cold", "water": "dry", "tree": "Pine"},
+    {"temperature": "warm", "water": "dry", "tree": "Cactus"},
+    {"temperature": "warm", "water": "wet", "tree": "Poplar"},
+];
+
+var class_name = "tree";
+var features = ["temperature", "water"];
+
+var dt = new DecisionTree(class_name, features);
+
+dt.train(training_data);
+
+var accuracy = dt.evaluate(test_data);
+console.log("Decision Tree Test Data Accuracy:", accuracy, "Expected: 1");
+
+var predicted_class;
+var predictionCount = 0;
+
+function setTemperature(temperatureInput) {
+    if (-45 <= temperatureInput && temperatureInput <= 10) {
+        return "cold";
+    }
+    else if (10 < temperatureInput && temperatureInput <= 70) {
+        return "warm";
+    }
+
+    console.log("Given temperature value", temperatureInput, "is not in the value range!");
+    return null;
+}
+
+function setWater(waterInput) {
+    if (100 <= waterInput && waterInput <= 550) {
+        return "dry";
+    }
+    else if (550 < waterInput && waterInput <= 1000) {
+        return "wet";
+    }
+
+    console.log("Given water value", waterInput, "is not in the value range!");
+    return null;
+}
+
+//According to given values predicts and returns the prediction
+function predictTree(temperatureInput, waterInput) {
+    //Set prediction values
+    var temperature = setTemperature(temperatureInput);
+    var water = setWater(waterInput);
+
+    //Do prediction
+    if (temperature != null && water != null) {
+        return dt.predict({
+            temperature: temperature,
+            water: water
+        });
+    }
+
+    console.log("Some prediction value is wrong. Continuing without predicting!")
+    return null;
+}
+
+//When called (from the UI) handles everything about prediction
+function handlePrediction(temperatureInput, waterInput) {
+    //Predict the tree according to given values
+    predicted_class = predictTree(temperatureInput, waterInput);
+
+    if (predicted_class != null) {
+        predictionCount++;
+        console.log("Prediction (" + predictionCount + "):", predicted_class);
+
+        //TODO: Call tree instantiation and algorithm animation function here
+        //TODO: Call point system function here
+    }
+}
+
+/* Import/Export trained model
+//To export (save) trained model for future use
+var treeJson = dt.toJSON();
+console.log("treeJson: ", treeJson);
+//Create a new model
+var treeJson = dt.toJSON();
+var preTrainedDecisionTree = new DecisionTree(treeJson);
+//Alternately, you can also import a previously trained model on an existing tree instance,
+assuming the features & class are the same:
+var treeJson = dt.toJSON();
+dt.import(treeJson);
+*/
+//-----------------DECISION TREE TEST ENDS------------------------------------------------------------------------//
 
 function createPanel(){
-    const panel = new GUI( { width: 310 } );
+    const panel = new GUI({ width: 310 } );
     const parameters ={
         temperature:15,
         water: 120,
-        humidty:0,
+        humidity:0,
         light:0,
     };
     panel.add(parameters, 'temperature', -45, 70, 1).name('Temperature');
     panel.add(parameters, 'water', 100, 1000, 1).name('Water (in ml)');
-    panel.add(parameters, 'humidty', 0, 0, 1).name('Humidty');
+    panel.add(parameters, 'humidity', 0, 0, 1).name('Humidity');
     panel.add(parameters, 'light', 0, 0, 1).name('Light');
-    
+
     const objectSettings = {
         'X Rotation':0.0,
         'Y Rotation':0.0,
@@ -770,10 +807,14 @@ function createPanel(){
     
     cameraTilt.add(camera.rotation,"z",0,Math.PI * 2);
 
-    
-    var obj = { add:function(){ console.log("clicked") }};
-    panel.add(obj,'add');
- 
+    //Take inputs from UI and call when prediction button is clicked
+    var predictionButton = {
+        add:function(){
+            console.log("Start Prediction button clicked.");
+            handlePrediction(parameters.temperature, parameters.water);
+        }
+    };
+    panel.add(predictionButton,'add').name("Start Prediction");
 }
 
 function intersect(pos) {
