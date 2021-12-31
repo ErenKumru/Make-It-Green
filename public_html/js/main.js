@@ -31,6 +31,12 @@ var cameraMovementSpeed = 0.1;
 var pointLight,ambientLight,spotLight,light1,light1Helper;
 var currentlyDisplayingTree;
 
+// Loading manager
+var loadingManager = null;
+var RESOURCES_LOADED = false;
+
+// loaded models
+var cactusModel, poplarTreeModel, pineTreeModel, appleTreeModel;
 
 // Add every object to this array
 var sceneObjects = [];
@@ -42,13 +48,27 @@ function main(){
     
     //LIGHTS
     initLights();
-       
+    
     //CAMERA
     camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.1, 1000 );
     camera.position.set(0,5,10);
     sceneObjects.push(camera);
     
+    // Loading Manager
+    loadingManager = new THREE.LoadingManager();
+    // LOAD MODELS 
+    loadModels();
     
+    loadingManager.onLoad = function(){
+            console.log("loaded all resources");
+            RESOURCES_LOADED = true;
+            // add models to the scene
+            onResourcesLoaded();
+    };
+    
+    // LOAD MODELS 
+    //loadModels();
+    //console.log(cactusModel);
     //sceneDisplay.add(camera);  
     //displayCactus(new THREE.Vector3( 1, -1, -1 ));
     
@@ -544,13 +564,15 @@ function main(){
     createCactus(new THREE.Vector3( 1, 0, -1 ));
     createAppleTree(new THREE.Vector3( 1, 0, -2 ));
     createPoplarTree(new THREE.Vector3( 1, 0, -2 ));  */
-    appleTreeGLTF(new THREE.Vector3( -5, 0, 2 ));
+    
+  /*  appleTreeGLTF(new THREE.Vector3( -5, 0, 2 ));
     poplarTreeGLTF(new THREE.Vector3( -2, 0, 2 ));
     pineTreeGLTF(new THREE.Vector3( 2, 0, 2 ));
-    cactusGLTF(new THREE.Vector3( 2, 0, 2 ));
+    cactusGLTF(new THREE.Vector3( 2, 0, 2 )); */
     
     // PLANE
-    const geometry_plane = new THREE.PlaneBufferGeometry(100, 100, 20, 20);
+    createPlanes();
+    /*const geometry_plane = new THREE.PlaneBufferGeometry(40, 40, 20, 20);
     const material_plane = new THREE.MeshStandardMaterial({
         color: new THREE.Color("green"),
     });
@@ -563,7 +585,7 @@ function main(){
     plane.userData.draggable = false;
     plane.userData.ground = true;
     scene.add(plane);
-    sceneObjects.push(plane);
+    sceneObjects.push(plane); */
 
     
     var animate = function () {
@@ -629,7 +651,7 @@ function keyEvents(){
                     moveForward = true;
                     break;
 		case 'ArrowLeft':
-		case 'KeyA':
+		case 'KeyA':                    
                     moveLeft = true;
 		    break;
 		case 'ArrowDown':
@@ -694,7 +716,7 @@ function keyEvents(){
 function initLights(){
     // LIGHTS
     // Ambient light for general illumination
-    ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
     //sceneDisplay.add(ambientLight);
     sceneObjects.push(ambientLight);
@@ -715,7 +737,7 @@ function initLights(){
     spotLight.shadow.bias = 0.0001;
     spotLight.shadow.mapSize.width = 2048; // Shadow Quality
     spotLight.shadow.mapSize.height = 2048; // Shadow Quality
-    
+    scene.add(spotLight.target);
     scene.add(spotLight);
     sceneObjects.push(spotLight);
 }
@@ -923,59 +945,63 @@ function createPoplarTree(position) {
 }
 
 // GLTF LOAD FUNCTIONS
-function appleTreeGLTF(position){
-    const loader = new GLTFLoader();
+function appleTreeGLTF(){
+    const loader = new GLTFLoader(loadingManager);
     loader.load('./models/apple_tree/AppleTree.gltf', function(gltf){
         const mesh = gltf.scene;
          // Cast and recieve shadow
         mesh.traverse( function( node ) {if ( node.isMesh ) { node.castShadow = true; node.receiveShadow = true;}});
         mesh.children[0].userData.draggable = true;
-        mesh.position.set(position.x, position.y, position.z);
+        appleTreeModel = mesh;
+    /*    mesh.position.set(position.x, position.y, position.z);
         sceneObjects.push(mesh);
         scene.add(mesh);
-        console.log(mesh);
+        console.log(mesh);*/
     });
 }
-function poplarTreeGLTF(position){
-    const loader = new GLTFLoader();
+function poplarTreeGLTF(){
+    const loader = new GLTFLoader(loadingManager);
     loader.load('./models/white_poplar_tree/poplar_tree.gltf', function(gltf){
         const mesh = gltf.scene;
          // Cast and recieve shadow
         mesh.traverse( function( node ) {if ( node.isMesh ) { node.castShadow = true; node.receiveShadow = true;}});
         mesh.children[0].userData.draggable = true;
-        mesh.rotation.y = 1.0;        // to make it look better
-        mesh.position.set(position.x, position.y, position.z);
+        //mesh.rotation.y = 1.0;        // to make it look better;
+        poplarTreeModel = mesh;
+    /*    mesh.position.set(position.x, position.y, position.z);
         sceneObjects.push(mesh);
         scene.add(mesh);
-        console.log(mesh);
+        console.log(mesh); */
     });
 }
-function pineTreeGLTF(position){
-    const loader = new GLTFLoader();
+function pineTreeGLTF(){
+    const loader = new GLTFLoader(loadingManager);
     loader.load('./models/pine/pine.gltf', function(gltf){
-        const mesh = gltf.scene;
+        const mesh = gltf.scene;    
         // Cast and recieve shadow
         mesh.traverse( function( node ) {if ( node.isMesh ) { node.castShadow = true; node.receiveShadow = true;}});
-        
         mesh.children[0].userData.draggable = true;
-        mesh.position.set(position.x, position.y, position.z);
+        pineTreeModel = mesh;
+    /*    mesh.position.set(position.x, position.y, position.z);
         sceneObjects.push(mesh);
         scene.add(mesh);
-        console.log(mesh);
+        console.log(mesh); */
     });
 }
-function cactusGLTF(position){
-    const loader = new GLTFLoader();
+function cactusGLTF(){
+    const loader = new GLTFLoader(loadingManager);
     loader.load('./models/cactus/cactus.gltf', function(gltf){
-        const mesh = gltf.scene;
+        const mesh = gltf.scene;     
          // Cast and recieve shadow
         mesh.traverse( function( node ) {if ( node.isMesh ) { node.castShadow = true; node.receiveShadow = true;}});
         mesh.children[0].userData.draggable = true;
-        mesh.position.set(position.x, position.y, position.z);
+        cactusModel = mesh;
+    /*    mesh.position.set(position.x, position.y, position.z);
         sceneObjects.push(mesh);
         scene.add(mesh);
-        console.log(mesh);
+        console.log(mesh); */
     });
+    
 }
 
 function rotateAboutXAxis(object, rad){
@@ -1040,7 +1066,7 @@ function onMouseWheel( event ) {
 }
 
 function cameraControls(){
-    const delta = 0.001;
+    const delta = 0.005;
 
     velocity.x -= velocity.x * 10.0 * delta;
     velocity.z -= velocity.z * 10.0 * delta;
@@ -1055,5 +1081,115 @@ function cameraControls(){
     controls.moveRight( - velocity.x * delta );
     controls.moveForward( - velocity.z * delta );
 
+}
+function loadModels(){
+    appleTreeGLTF();
+    poplarTreeGLTF();
+    cactusGLTF();
+    pineTreeGLTF();
+}
+
+function addCactus(position){
+    var newCactus = cactusModel.clone();
+    newCactus.position.set(position.x, position.y, position.z);
+    sceneObjects.push(newCactus);
+    scene.add(newCactus); 
+}
+function addAppleTree(position){
+    var newAppleTree = appleTreeModel.clone();
+    newAppleTree.position.set(position.x, position.y, position.z);
+    sceneObjects.push(newAppleTree);
+    scene.add(newAppleTree); 
+}
+function addPoplarTree(position){
+    var newPoplarTree = poplarTreeModel.clone();
+    newPoplarTree.position.set(position.x, position.y, position.z);
+    sceneObjects.push(newPoplarTree);
+    scene.add(newPoplarTree); 
+}
+function addPineTree(position){
+    var newPineTree = pineTreeModel.clone();
+    pineTreeModel.position.set(position.x, position.y, position.z);
+    sceneObjects.push(newPineTree);
+    scene.add(newPineTree); 
+}
+
+function onResourcesLoaded(){
+    // X should be between -80 -40
+    addAppleTree(new THREE.Vector3( -77, 0, 20 ));
+    addAppleTree(new THREE.Vector3( -55, 0, 14 ));
+    addAppleTree(new THREE.Vector3( -64, 0, 12 ));
+    addAppleTree(new THREE.Vector3( -45, 0, 34 ));
+    addAppleTree(new THREE.Vector3( -57, 0, 45 ));
+    
+    addCactus(new THREE.Vector3( -5, 0, 2 ));
+    addPineTree(new THREE.Vector3( -3, 0, 5 ));
+    addPoplarTree(new THREE.Vector3( 0, 0, 2 ));
+    
+
+}
+
+function createPlanes(){
+    // PLANE 1
+    const geometry_plane = new THREE.PlaneBufferGeometry(40, 100, 20, 20);
+    const material_plane1 = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x0D2903),
+    });
+    const plane1 = new THREE.Mesh(geometry_plane, material_plane1);
+    plane1.material.needsUpdate = true; 
+    plane1.rotation.x = -Math.PI / 2;
+    plane1.position.y = 0;
+    plane1.position.x = -60;
+    plane1.receiveShadow = true;
+    plane1.userData.draggable = false;
+    plane1.userData.ground = true;
+    scene.add(plane1);
+    sceneObjects.push(plane1);
+    
+    // PLANE 2
+    const material_plane2 = new THREE.MeshStandardMaterial({
+        color: new THREE.Color("white"),
+    });
+    const plane2 = new THREE.Mesh(geometry_plane, material_plane2);
+    plane2.material.needsUpdate = true; 
+    plane2.rotation.x = -Math.PI / 2;
+    plane2.position.y = 0;
+    plane2.position.x = -20;
+    plane2.receiveShadow = true;
+    plane2.userData.draggable = false;
+    plane2.userData.ground = true;
+    scene.add(plane2);
+    sceneObjects.push(plane2);
+    
+    // PLANE 3
+    const material_plane3 = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0xF8C471),
+    });
+    const plane3 = new THREE.Mesh(geometry_plane, material_plane3);
+    plane3.material.needsUpdate = true; 
+    plane3.rotation.x = -Math.PI / 2;
+    plane3.position.y = 0;
+    plane3.position.x = 20;
+    plane3.receiveShadow = true;
+    plane3.userData.draggable = false;
+    plane3.userData.ground = true;
+    scene.add(plane3);
+    sceneObjects.push(plane3);
+    
+     // PLANE 4
+    const material_plane4 = new THREE.MeshStandardMaterial({
+        color: new THREE.Color("green"),
+    });
+    const plane4 = new THREE.Mesh(geometry_plane, material_plane4);
+    plane4.material.needsUpdate = true; 
+    plane4.rotation.x = -Math.PI / 2;
+    plane4.position.y = 0;
+    plane4.position.x = 60;
+    plane4.receiveShadow = true;
+    plane4.userData.draggable = false;
+    plane4.userData.ground = true;
+    scene.add(plane4);
+    sceneObjects.push(plane4);
+    
 }
 main();		
