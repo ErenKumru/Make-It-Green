@@ -545,7 +545,7 @@ function main(){
     createAppleTree(new THREE.Vector3( 1, 0, -2 ));
     createPoplarTree(new THREE.Vector3( 1, 0, -2 ));  */
     appleTreeGLTF(new THREE.Vector3( -5, 0, 2 ));
-    poplarTreeGLTF(new THREE.Vector3( 0, 1, 2 ));
+    poplarTreeGLTF(new THREE.Vector3( -2, 0, 2 ));
     pineTreeGLTF(new THREE.Vector3( 2, 0, 2 ));
     cactusGLTF(new THREE.Vector3( 2, 0, 2 ));
     
@@ -938,11 +938,12 @@ function appleTreeGLTF(position){
 }
 function poplarTreeGLTF(position){
     const loader = new GLTFLoader();
-    loader.load('./models/white_poplar_tree/poplarTree.gltf', function(gltf){
+    loader.load('./models/white_poplar_tree/poplar_tree.gltf', function(gltf){
         const mesh = gltf.scene;
          // Cast and recieve shadow
         mesh.traverse( function( node ) {if ( node.isMesh ) { node.castShadow = true; node.receiveShadow = true;}});
         mesh.children[0].userData.draggable = true;
+        mesh.rotation.y = 1.0;        // to make it look better
         mesh.position.set(position.x, position.y, position.z);
         sceneObjects.push(mesh);
         scene.add(mesh);
