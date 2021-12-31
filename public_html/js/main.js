@@ -86,6 +86,9 @@ function main(){
         mouseMove.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouseMove.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     });
+    
+    // To resize the window
+    window.addEventListener( 'resize', onWindowResize, false );
     document.addEventListener( 'wheel', onMouseWheel, false );
     
     //RENDERER
@@ -474,10 +477,10 @@ function main(){
     createCactus(new THREE.Vector3( 1, 0, -1 ));
     createAppleTree(new THREE.Vector3( 1, 0, -2 ));
     createPoplarTree(new THREE.Vector3( 1, 0, -2 ));  */
-    appleTreeGLTF(new THREE.Vector3( -5, 1, 2 ));
-    // poplarTreeGLTF(new THREE.Vector3( 0, 1, 2 ));
-    pineTreeGLTF(new THREE.Vector3( 2, 1, 2 ));
-    cactusGLTF(new THREE.Vector3( 2, 1, 2 ));
+    appleTreeGLTF(new THREE.Vector3( -5, 0, 2 ));
+    poplarTreeGLTF(new THREE.Vector3( -2, 0, 2 ));
+    pineTreeGLTF(new THREE.Vector3( 2, 0, 2 ));
+    cactusGLTF(new THREE.Vector3( 2, 0, 2 ));
     
     // PLANE
     const geometry_plane = new THREE.PlaneBufferGeometry(100, 100, 20, 20);
@@ -498,12 +501,7 @@ function main(){
     
     var animate = function () {
 
-        const time = performance.now();
-        const delta = ( time - prevTime ) / 10000;
-
-        velocity.x -= velocity.x * 10.0 * delta;
-        velocity.z -= velocity.z * 10.0 * delta;
-
+       cameraControls();
       
         //buildTwistMaterial twist test
         scene.traverse( function ( child ) {
@@ -518,19 +516,6 @@ function main(){
         angle += 0.01;
         stoneCube.rotation.y = angle;
 
-
-        direction.z = Number( moveForward ) - Number( moveBackward );
-        direction.x = Number( moveRight ) - Number( moveLeft );
-        direction.normalize(); // this ensures consistent movements in all directions
-
-        if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
-	if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
-
-        controls.moveRight( - velocity.x * delta );
-	controls.moveForward( - velocity.z * delta );
-
-
-        prevTime = time;
     /*    if(moveRight){
             camera.position.x += 1.0;
         }
@@ -590,9 +575,11 @@ function keyEvents(){
                     break;
                 case 'PageUp':
                     moveUp = true;
+                    camera.position.y += 0.5;
                     break;
                 case 'PageDown':
                     moveDown = true;
+                    camera.position.y -= 0.5;
                     break;
                 case 'KeyP':
                     if(!controls.isLocked){
@@ -997,6 +984,7 @@ function poplarTreeGLTF(position){
          // Cast and recieve shadow
         mesh.traverse( function( node ) {if ( node.isMesh ) { node.castShadow = true; node.receiveShadow = true;}});
         mesh.children[0].userData.draggable = true;
+        mesh.rotation.y = 1.0;        // to make it look better
         mesh.position.set(position.x, position.y, position.z);
         sceneObjects.push(mesh);
         scene.add(mesh);
@@ -1021,6 +1009,8 @@ function cactusGLTF(position){
     const loader = new GLTFLoader();
     loader.load('./models/cactus/cactus.gltf', function(gltf){
         const mesh = gltf.scene;
+         // Cast and recieve shadow
+        mesh.traverse( function( node ) {if ( node.isMesh ) { node.castShadow = true; node.receiveShadow = true;}});
         mesh.children[0].userData.draggable = true;
         mesh.position.set(position.x, position.y, position.z);
         sceneObjects.push(mesh);
@@ -1090,4 +1080,21 @@ function onMouseWheel( event ) {
   camera.position.z += event.deltaY * 0.01; // move camera along z-axis
 }
 
+function cameraControls(){
+    const delta = 0.001;
+
+    velocity.x -= velocity.x * 10.0 * delta;
+    velocity.z -= velocity.z * 10.0 * delta;
+    
+    direction.z = Number( moveForward ) - Number( moveBackward );
+    direction.x = Number( moveRight ) - Number( moveLeft );
+    direction.normalize(); // this ensures consistent movements in all directions
+
+    if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
+    if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
+
+    controls.moveRight( - velocity.x * delta );
+    controls.moveForward( - velocity.z * delta );
+
+}
 main();		
