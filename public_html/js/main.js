@@ -36,7 +36,7 @@ var loadingManager = null;
 var RESOURCES_LOADED = false;
 
 // loaded models
-var cactusModel, poplarTreeModel, pineTreeModel, appleTreeModel, fenceModel;
+var cactusModel, poplarTreeModel, pineTreeModel, appleTreeModel, fenceModel, shedModel;
 
 // Add every object to this array
 var sceneObjects = [];
@@ -984,7 +984,7 @@ function fenceGLTF(){
             }
         });
         mesh.name = "fence";
-        mesh.children[0].userData.draggable = true;
+        mesh.userData.draggable = true;
         // var newMaterial = new THREE.MeshStandardMaterial({color: 0xE16D0D});
         // mesh.traverse((object) => {
         //     if(object.isMesh){
@@ -994,6 +994,28 @@ function fenceGLTF(){
         fenceModel = mesh;
     });
 }
+function shedGLTF(){
+    const loader = new GLTFLoader(loadingManager);
+    loader.load('./models/shed/shed.gltf', function(gltf){
+        const mesh = gltf.scene;     
+         // Cast and recieve shadow
+        mesh.traverse( function( node ) {
+            if ( node.isMesh ) {
+                node.material = new THREE.MeshToonMaterial({
+                    color: node.material.color,
+                    map: node.material.map
+                });
+
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
+        mesh.name = "shed";
+        mesh.children[0].userData.draggable = true;
+        shedModel = mesh;
+    });
+}
+
 function rotateAboutXAxis(object, rad){
     if(object != null){
         object.traverse( function (child){
@@ -1078,6 +1100,7 @@ function loadModels(){
     cactusGLTF();
     pineTreeGLTF();
     fenceGLTF();
+    shedGLTF();
 }
 
 function addCactus(position){
@@ -1100,18 +1123,27 @@ function addPoplarTree(position){
 }
 function addPineTree(position){
     var newPineTree = pineTreeModel.clone();
-    pineTreeModel.position.set(position.x, position.y, position.z);
+    newPineTree.position.set(position.x, position.y, position.z);
     sceneObjects.push(newPineTree);
     scene.add(newPineTree); 
 }
 
-function addFence(position){
+function addFence(position, rotate){
     var fence = fenceModel.clone();
-    fenceModel.position.set(position.x, position.y, position.z);
+    fence.position.set(position.x, position.y, position.z);
+    if(rotate){
+        fence.rotation.y += Math.PI/2;
+    }
     sceneObjects.push(fence);
     scene.add(fence); 
 }
 
+function addShed(position){
+    var newShed = shedModel.clone();
+    newShed.position.set(position.x, position.y, position.z);
+    sceneObjects.push(newShed);
+    scene.add(newShed); 
+}
 function onResourcesLoaded(){
     // X should be between -80 -40
     addAppleTree(new THREE.Vector3( -77, 0, 20 ));
@@ -1124,17 +1156,25 @@ function onResourcesLoaded(){
     addPineTree(new THREE.Vector3( -3, 0, 5 ));
     addPoplarTree(new THREE.Vector3( 0, 0, 2 ));
   
-     //addFence(new THREE.Vector3( 0, 0, 20 ));
-    //addFence(new THREE.Vector3( 0, 0, 20 ));
-    for(let i = -45; i < 50; i += 6){
-        addFence(new THREE.Vector3( 0, 0, i  ));
+    addShed(new THREE.Vector3( 50, 0, -50 ));
+    for(let i = -36; i < 44; i += 6){
+        addFence(new THREE.Vector3( -40, 0, i ),false);
     }
-    
+     for(let i = -36; i < 44; i += 6){
+        addFence(new THREE.Vector3( 40, 0, i ),false);
+    }
+    // Add rotated fences
+    for(let i = -36; i < 44; i += 6){
+        addFence(new THREE.Vector3( i, 0, -40 ),true);
+    }
+    for(let i = -36; i < 44; i += 6){
+        addFence(new THREE.Vector3( i, 0, 40 ),true);
+    }
 }
 
 function createPlanes(){
     // PLANE 1
-    const geometry_plane = new THREE.PlaneBufferGeometry(40, 100, 20, 20);
+    const geometry_plane = new THREE.PlaneBufferGeometry(40, 40, 20, 20);
     const material_plane1 = new THREE.MeshToonMaterial({
         color: new THREE.Color(0x0D2903),
     });
@@ -1143,7 +1183,8 @@ function createPlanes(){
     plane1.material.needsUpdate = true; 
     plane1.rotation.x = -Math.PI / 2;
     plane1.position.y = 0;
-    plane1.position.x = -60;
+    plane1.position.x = -20;
+    plane1.position.z = -20;
     plane1.receiveShadow = true;
     plane1.userData.draggable = false;
     plane1.userData.ground = true;
@@ -1159,7 +1200,8 @@ function createPlanes(){
     plane2.material.needsUpdate = true; 
     plane2.rotation.x = -Math.PI / 2;
     plane2.position.y = 0;
-    plane2.position.x = -20;
+    plane2.position.x = 20;
+    plane2.position.z = -20;
     plane2.receiveShadow = true;
     plane2.userData.draggable = false;
     plane2.userData.ground = true;
@@ -1175,7 +1217,8 @@ function createPlanes(){
     plane3.material.needsUpdate = true; 
     plane3.rotation.x = -Math.PI / 2;
     plane3.position.y = 0;
-    plane3.position.x = 20;
+    plane3.position.x = -20;
+    plane3.position.z = 20;
     plane3.receiveShadow = true;
     plane3.userData.draggable = false;
     plane3.userData.ground = true;
@@ -1191,7 +1234,8 @@ function createPlanes(){
     plane4.material.needsUpdate = true; 
     plane4.rotation.x = -Math.PI / 2;
     plane4.position.y = 0;
-    plane4.position.x = 60;
+    plane4.position.x = 20;
+    plane4.position.z = 20;
     plane4.receiveShadow = true;
     plane4.userData.draggable = false;
     plane4.userData.ground = true;
