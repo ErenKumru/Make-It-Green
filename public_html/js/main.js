@@ -568,6 +568,7 @@ function createPanel(){
     };
     panel.add(predictionButton,'add').name("Start Prediction");
 
+    //Shaders
     var isDefaultMaterial = true;
     var defaultMaterials = [];
     var count = 0;
@@ -632,26 +633,33 @@ function createPanel(){
     }
     panel.add(switchShadersButton, 'add').name("Switch Shaders");
 
+    //Shadows
+    //Turn ON and OFF directional light's Shadows (sun)
     var toggleShadowsButton = {
         add:function() {
             console.log("toggleShadowsButton is clicked");
-            sceneObjects.forEach(function(obj) {
-                if(obj.name === "plane") {
-                    obj.castShadow = !obj.castShadow;
-                    obj.receiveShadow = !obj.receiveShadow;
-                }
-                else {
-                    obj.traverse( function( node ) {
-                        if ( node.isMesh ) {
-                            node.castShadow = !node.castShadow;
-                            node.receiveShadow = !node.receiveShadow;
-                        }
-                    });
-                }
-            });
+            directionalLight.castShadow = !directionalLight.castShadow;
+            spotLight.castShadow = !spotLight.castShadow;
         }
     }
     panel.add(toggleShadowsButton, 'add').name("Toggle Shadows");
+
+    //Shadow Quality
+    var q = panel.add( { q: "Medium" }, 'q', [ "Low", "Medium", "High" ] ).name( 'Shadow Quality' );
+    var shadowQuality = {
+        add:function () {
+            var quality;
+            if(q.object.q === "Low")  quality = 1024;
+            else if(q.object.q === "Medium") quality = 2048;
+            else if(q.object.q === "High") quality = 4096;
+
+            directionalLight.shadow.map.dispose()
+            directionalLight.shadow.map = null
+            directionalLight.shadow.mapSize.width = quality; // Shadow Quality
+            directionalLight.shadow.mapSize.height = quality; // Shadow Quality
+        }
+    }
+    panel.add(shadowQuality, 'add').name("Change Shadow Quality");
 }
 
 function twistScene() {
