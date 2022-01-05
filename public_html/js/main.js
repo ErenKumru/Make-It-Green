@@ -1156,7 +1156,7 @@ function onResourcesLoaded(){
     addPineTree(new THREE.Vector3( -3, 0, 5 ));
     addPoplarTree(new THREE.Vector3( 0, 0, 2 ));
   
-    addShed(new THREE.Vector3( 0, 0, -20 ));
+    addShed(new THREE.Vector3( 50, 0, -50 ));
     for(let i = -36; i < 44; i += 6){
         addFence(new THREE.Vector3( -40, 0, i ),false);
     }
