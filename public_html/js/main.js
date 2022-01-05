@@ -512,38 +512,32 @@ var twist = false;
 
 function createPanel(){
     const panel = new GUI({ width: 310 } );
-    const parameters ={
-        temperature:15,
-        water: 120,
-        humidity:0,
-        light:0,
-    };
-    panel.add(parameters, 'temperature', -45, 70, 1).name('Temperature');
-    panel.add(parameters, 'water', 100, 1000, 1).name('Water (in ml)');
-    panel.add(parameters, 'humidity', 0, 0, 1).name('Humidity');
-    panel.add(parameters, 'light', 0, 0, 1).name('Light');
+    panel.title("GUI");
+    panel.close();
+
+    //Scene settings will be under this folder
+    const settings = panel.addFolder('Settings');
 
     const objectSettings = {
         'X Rotation':0.0,
         'Y Rotation':0.0,
         'Z Rotation':0.0,
     }
-    
-    const object = panel.addFolder('Object Settings');
-    const cameraTilt = panel.addFolder('Camera Rotate Z');
+
+    const object = settings.addFolder('Object Settings');
+
     // OBJECT ROTATION
     object.add(objectSettings,'X Rotation',0,Math.PI * 2).onChange( function(val){
-         rotateAboutXAxis(selectedObject,val);
+        rotateAboutXAxis(selectedObject,val);
     });
     object.add(objectSettings, 'Y Rotation',0,Math.PI * 2).onChange( function(val){
-         rotateAboutYAxis(selectedObject,val);
+        rotateAboutYAxis(selectedObject,val);
     });
     object.add(objectSettings, 'Z Rotation',0,Math.PI * 2).onChange( function(val){
-         rotateAboutZAxis(selectedObject,val);
+        rotateAboutZAxis(selectedObject,val);
     });
-    object.close();
-    
-    // OBJECT TRANSDORM
+
+    // OBJECT TRANSFORM
     var moveForward = { moveForward:function(){ transformOnY(selectedObject,1); }};
     object.add(moveForward,'moveForward').name("Move it forward");
     var moveBackward = { moveBackward:function(){ transformOnY(selectedObject,-1); }};
@@ -556,17 +550,35 @@ function createPanel(){
     object.add(moveUp,'moveUp').name("Move it up");
     var moveDown = { moveDown:function(){ transformOnZ(selectedObject,1); }};
     object.add(moveDown,'moveDown').name("Move it down");
-    
-    cameraTilt.add(camera.rotation,"z",0,Math.PI * 2);
 
-    //Take inputs from UI and call when prediction button is clicked
-    var predictionButton = {
-        add:function(){
-            console.log("Start Prediction button clicked.");
-            handlePrediction(parameters.temperature, parameters.water);
+    const shadowSettings = settings.addFolder('Shadow Settings');
+    //Shadows
+    //Turn ON and OFF directional light's Shadows (sun)
+    var toggleShadowsButton = {
+        add:function() {
+            console.log("toggleShadowsButton is clicked");
+            directionalLight.castShadow = !directionalLight.castShadow;
+            spotLight.castShadow = !spotLight.castShadow;
         }
-    };
-    panel.add(predictionButton,'add').name("Start Prediction");
+    }
+    shadowSettings.add(toggleShadowsButton, 'add').name("Toggle Shadows");
+
+    //Shadow Quality
+    var q = shadowSettings.add( { q: "Medium" }, 'q', [ "Low", "Medium", "High" ] ).name( 'Shadow Quality' );
+    var quality;
+    var shadowQuality = {
+        add:function () {
+            if(q.object.q === "Low")  quality = 1024;
+            else if(q.object.q === "Medium") quality = 2048;
+            else if(q.object.q === "High") quality = 4096;
+
+            directionalLight.shadow.map.dispose()
+            directionalLight.shadow.map = null
+            directionalLight.shadow.mapSize.width = quality; // Shadow Quality
+            directionalLight.shadow.mapSize.height = quality; // Shadow Quality
+        }
+    }
+    shadowSettings.add(shadowQuality, 'add').name("Change Shadow Quality");
 
     //Shaders
     var isDefaultMaterial = true;
@@ -631,35 +643,45 @@ function createPanel(){
             count = 0;
         }
     }
-    panel.add(switchShadersButton, 'add').name("Switch Shaders");
+    settings.add(switchShadersButton, 'add').name("Switch Shaders");
 
-    //Shadows
-    //Turn ON and OFF directional light's Shadows (sun)
-    var toggleShadowsButton = {
-        add:function() {
-            console.log("toggleShadowsButton is clicked");
-            directionalLight.castShadow = !directionalLight.castShadow;
-            spotLight.castShadow = !spotLight.castShadow;
+    object.close();
+    shadowSettings.close();
+    settings.close();
+    //Scene settings folder ends here
+
+    //-------------------------------------------------------------------------------//
+
+    //Prediction settings will be under this folder
+    const predictionSettings = panel.addFolder('Prediction');
+    const parameterSettings = predictionSettings.addFolder("Parameters");
+
+    const parameters = {
+        temperature:15,
+        water: 120,
+        humidity:0,
+        light:0,
+    };
+    parameterSettings.add(parameters, 'temperature', -45, 70, 1).name('Temperature');
+    parameterSettings.add(parameters, 'water', 100, 1000, 1).name('Water (in ml)');
+    parameterSettings.add(parameters, 'humidity', 0, 0, 1).name('Humidity');
+    parameterSettings.add(parameters, 'light', 0, 0, 1).name('Light');
+
+    //Take inputs from UI and call when prediction button is clicked
+    var predictionButton = {
+        add:function(){
+            console.log("Start Prediction button clicked.");
+            handlePrediction(parameters.temperature, parameters.water);
         }
-    }
-    panel.add(toggleShadowsButton, 'add').name("Toggle Shadows");
+    };
+    predictionSettings.add(predictionButton,'add').name("Start Prediction");
 
-    //Shadow Quality
-    var q = panel.add( { q: "Medium" }, 'q', [ "Low", "Medium", "High" ] ).name( 'Shadow Quality' );
-    var shadowQuality = {
-        add:function () {
-            var quality;
-            if(q.object.q === "Low")  quality = 1024;
-            else if(q.object.q === "Medium") quality = 2048;
-            else if(q.object.q === "High") quality = 4096;
+    // parameterSettings.close();
+    predictionSettings.close();
+    //Prediction settings folder ends here
 
-            directionalLight.shadow.map.dispose()
-            directionalLight.shadow.map = null
-            directionalLight.shadow.mapSize.width = quality; // Shadow Quality
-            directionalLight.shadow.mapSize.height = quality; // Shadow Quality
-        }
-    }
-    panel.add(shadowQuality, 'add').name("Change Shadow Quality");
+    // const cameraTilt = panel.addFolder('Camera Rotate Z');
+    // cameraTilt.add(camera.rotation,"z",0,Math.PI * 2);
 }
 
 function twistScene() {
