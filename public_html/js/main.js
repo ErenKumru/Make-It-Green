@@ -404,13 +404,9 @@ function initLights(){
     sceneObjects.push(spotLight);
 }
 
-//-----------------DECISION TREE TEST STARTS----------------------------------------------------------------------//
+//-----------------DECISION TREE STARTS----------------------------------------------------------------------//
 //Import DecisionTree
 var DecisionTree = require('decision-tree');
-
-//Create training data
-//Test data is compared to this data to check accuracy
-//Predictions are made on this data to give results
 
 /*
 temp: cold/hot
@@ -419,6 +415,9 @@ humidity: low/high
 light: short/long
 tree: Apple/Pine/Cactus/Poplar
  */
+//Create training data
+//Test data is compared to this data to check accuracy
+//Predictions are made on this data to give results
 var training_data = [
     {"temperature": "cold", "water": "dry", "humidity": "low", "light": "short", "tree": "Pine"},
     {"temperature": "cold", "water": "dry", "humidity": "low", "light": "long", "tree": "Pine"},
@@ -457,7 +456,6 @@ var accuracy = dt.evaluate(test_data);
 console.log("Decision Tree Test Data Accuracy:", accuracy, "Expected: 1");
 
 var predicted_class;
-var predictionCount = 0;
 
 function setTemperature(temperatureInput) {
     if (-30 <= temperatureInput && temperatureInput <= 15) {
@@ -529,20 +527,6 @@ function predictTree(temperatureInput, waterInput, humidityInput, lightInput) {
     return null;
 }
 
-//When called (from the UI) handles everything about prediction
-function handlePrediction(temperatureInput, waterInput, humidityInput, lightInput) {
-    //Predict the tree according to given values
-    predicted_class = predictTree(temperatureInput, waterInput, humidityInput, lightInput);
-
-    if (predicted_class != null) {
-        predictionCount++;
-        console.log("Prediction (" + predictionCount + "):", predicted_class);
-
-        //TODO: Call tree instantiation and algorithm animation function here
-        //TODO: Call point system function here
-    }
-}
-
 /* Import/Export trained model
 //To export (save) trained model for future use
 var treeJson = dt.toJSON();
@@ -555,8 +539,36 @@ assuming the features & class are the same:
 var treeJson = dt.toJSON();
 dt.import(treeJson);
 */
-//-----------------DECISION TREE TEST ENDS------------------------------------------------------------------------//
+//-----------------DECISION TREE ENDS------------------------------------------------------------------------//
+
+//Point system with GUI
+var guessCount = 0;
+var points = 0;
+
+function handlePoints() {
+    if (guess.object.guess === predicted_class) {
+        guessCount++;
+        if (guessCount % 6 === 0) points += 100;
+        else points += 10;
+        pointsGUI.object.points = points;
+    }
+}
+
+//When called (from the UI), handles everything about prediction
+function handlePrediction(temperatureInput, waterInput, humidityInput, lightInput) {
+    //Predict the tree according to given values
+    predicted_class = predictTree(temperatureInput, waterInput, humidityInput, lightInput);
+
+    if (predicted_class != null) {
+        handlePoints(); //Calculates points according to guess and guessCount
+
+        //TODO: Call tree instantiation and algorithm animation function here
+    }
+}
+
 var twist = false;
+var guess;
+var pointsGUI;
 
 function createPanel(){
     const panel = new GUI({ width: 310 } );
@@ -601,6 +613,21 @@ function createPanel(){
 
     //Shadows
     const shadowSettings = settings.addFolder('Shadow Settings');
+
+    //Shadow Quality
+    var q = shadowSettings.add({q: "Medium"},'q', ["Low", "Medium", "High"]).name('Shadow Quality').onChange(shadowQuality);
+    var quality;
+    function shadowQuality() {
+        if(q.object.q === "Low")  quality = 1024;
+        else if(q.object.q === "Medium") quality = 2048;
+        else if(q.object.q === "High") quality = 4096;
+
+        directionalLight.shadow.map.dispose()
+        directionalLight.shadow.map = null
+        directionalLight.shadow.mapSize.width = quality; // Shadow Quality
+        directionalLight.shadow.mapSize.height = quality; // Shadow Quality
+    }
+
     //Turn ON and OFF directional light's Shadows (sun)
     var toggleShadowsButton = {
         add:function() {
@@ -610,23 +637,6 @@ function createPanel(){
         }
     }
     shadowSettings.add(toggleShadowsButton, 'add').name("Toggle Shadows");
-
-    //Shadow Quality
-    var q = shadowSettings.add( { q: "Medium" }, 'q', [ "Low", "Medium", "High" ] ).name( 'Shadow Quality' );
-    var quality;
-    var shadowQuality = {
-        add:function () {
-            if(q.object.q === "Low")  quality = 1024;
-            else if(q.object.q === "Medium") quality = 2048;
-            else if(q.object.q === "High") quality = 4096;
-
-            directionalLight.shadow.map.dispose()
-            directionalLight.shadow.map = null
-            directionalLight.shadow.mapSize.width = quality; // Shadow Quality
-            directionalLight.shadow.mapSize.height = quality; // Shadow Quality
-        }
-    }
-    shadowSettings.add(shadowQuality, 'add').name("Change Shadow Quality");
 
     //Shaders
     var isDefaultMaterial = true;
@@ -714,6 +724,10 @@ function createPanel(){
     parameterSettings.add(parameters, 'water', 20, 1500, 10).name('Water  (ml / week)');
     parameterSettings.add(parameters, 'humidity', 30, 75, 5).name('Humidity  (%)');
     parameterSettings.add(parameters, 'light', 4, 11, 1).name('Light  (h / day)');
+
+    //Guess and points
+    guess = predictionSettings.add({guess: "None"},'guess',["None", "Pine", "Apple", "Cactus", "Poplar"]).name('Your Guess');
+    pointsGUI = predictionSettings.add({points: 0},'points' ).name('Points Earned').listen().disable();
 
     //Take inputs from UI and call when prediction button is clicked
     var predictionButton = {
