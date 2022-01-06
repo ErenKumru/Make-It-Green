@@ -541,11 +541,13 @@ dt.import(treeJson);
 */
 //-----------------DECISION TREE ENDS------------------------------------------------------------------------//
 
-//Point system with GUI
+//Guess system with GUI
 var guessCount = 0;
 var points = 0;
 
-function handlePoints() {
+function handleGuess() {
+    answer.object.answer = predicted_class;
+
     if (guess.object.guess === predicted_class) {
         guessCount++;
         if (guessCount % 6 === 0) points += 100;
@@ -560,7 +562,7 @@ function handlePrediction(temperatureInput, waterInput, humidityInput, lightInpu
     predicted_class = predictTree(temperatureInput, waterInput, humidityInput, lightInput);
 
     if (predicted_class != null) {
-        handlePoints(); //Calculates points according to guess and guessCount
+        handleGuess(); //Calculates points and shows right answers
 
         //TODO: Call tree instantiation and algorithm animation function here
     }
@@ -568,6 +570,7 @@ function handlePrediction(temperatureInput, waterInput, humidityInput, lightInpu
 
 var twist = false;
 var guess;
+var answer;
 var pointsGUI;
 
 function createPanel(){
@@ -727,6 +730,7 @@ function createPanel(){
 
     //Guess and points
     guess = predictionSettings.add({guess: "None"},'guess',["None", "Pine", "Apple", "Cactus", "Poplar"]).name('Your Guess');
+    answer = predictionSettings.add({answer: ""},'answer' ).name('Right Answer').listen().disable();
     pointsGUI = predictionSettings.add({points: 0},'points' ).name('Points Earned').listen().disable();
 
     //Take inputs from UI and call when prediction button is clicked
