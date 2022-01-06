@@ -411,23 +411,43 @@ var DecisionTree = require('decision-tree');
 //Create training data
 //Test data is compared to this data to check accuracy
 //Predictions are made on this data to give results
+
+/*
+temp: cold/hot
+water: dry/wet
+humidity: low/high
+light: short/long
+tree: Apple/Pine/Cactus/Poplar
+ */
 var training_data = [
-    {"temperature": "cold", "water": "wet", "tree": "Apple"},
-    {"temperature": "cold", "water": "dry", "tree": "Pine"},
-    {"temperature": "warm", "water": "dry", "tree": "Cactus"},
-    {"temperature": "warm", "water": "wet", "tree": "Poplar"},
+    {"temperature": "cold", "water": "dry", "humidity": "low", "light": "short", "tree": "Pine"},
+    {"temperature": "cold", "water": "dry", "humidity": "low", "light": "long", "tree": "Pine"},
+    {"temperature": "cold", "water": "dry", "humidity": "high", "light": "short", "tree": "Pine"},
+    {"temperature": "cold", "water": "dry", "humidity": "high", "light": "long", "tree": "Apple"},
+    {"temperature": "cold", "water": "wet", "humidity": "low", "light": "short", "tree": "Pine"},
+    {"temperature": "cold", "water": "wet", "humidity": "low", "light": "long", "tree": "Apple"},
+    {"temperature": "cold", "water": "wet", "humidity": "high", "light": "short", "tree": "Apple"},
+    {"temperature": "cold", "water": "wet", "humidity": "high", "light": "long", "tree": "Apple"},
+    {"temperature": "hot", "water": "dry", "humidity": "low", "light": "short", "tree": "Cactus"},
+    {"temperature": "hot", "water": "dry", "humidity": "low", "light": "long", "tree": "Cactus"},
+    {"temperature": "hot", "water": "dry", "humidity": "high", "light": "short", "tree": "Poplar"},
+    {"temperature": "hot", "water": "dry", "humidity": "high", "light": "long", "tree": "Cactus"},
+    {"temperature": "hot", "water": "wet", "humidity": "low", "light": "short", "tree": "Poplar"},
+    {"temperature": "hot", "water": "wet", "humidity": "low", "light": "long", "tree": "Cactus"},
+    {"temperature": "hot", "water": "wet", "humidity": "high", "light": "short", "tree": "Poplar"},
+    {"temperature": "hot", "water": "wet", "humidity": "high", "light": "long", "tree": "Poplar"},
 ];
 
 //Used to check the accuracy of the model
 var test_data = [
-    {"temperature": "cold", "water": "wet", "tree": "Apple"},
-    {"temperature": "cold", "water": "dry", "tree": "Pine"},
-    {"temperature": "warm", "water": "dry", "tree": "Cactus"},
-    {"temperature": "warm", "water": "wet", "tree": "Poplar"},
+    {"temperature": "cold", "water": "dry", "humidity": "low", "light": "short", "tree": "Pine"},
+    {"temperature": "cold", "water": "dry", "humidity": "high", "light": "long", "tree": "Apple"},
+    {"temperature": "hot", "water": "wet", "humidity": "low", "light": "long", "tree": "Cactus"},
+    {"temperature": "hot", "water": "wet", "humidity": "high", "light": "long", "tree": "Poplar"},
 ];
 
 var class_name = "tree";
-var features = ["temperature", "water"];
+var features = ["temperature", "water", "humidity", "light"];
 
 var dt = new DecisionTree(class_name, features);
 
@@ -440,11 +460,11 @@ var predicted_class;
 var predictionCount = 0;
 
 function setTemperature(temperatureInput) {
-    if (-45 <= temperatureInput && temperatureInput <= 10) {
+    if (-30 <= temperatureInput && temperatureInput <= 15) {
         return "cold";
     }
-    else if (10 < temperatureInput && temperatureInput <= 70) {
-        return "warm";
+    else if (15 < temperatureInput && temperatureInput <= 60) {
+        return "hot";
     }
 
     console.log("Given temperature value", temperatureInput, "is not in the value range!");
@@ -452,10 +472,10 @@ function setTemperature(temperatureInput) {
 }
 
 function setWater(waterInput) {
-    if (100 <= waterInput && waterInput <= 550) {
+    if (20 <= waterInput && waterInput <= 760) {
         return "dry";
     }
-    else if (550 < waterInput && waterInput <= 1000) {
+    else if (760 < waterInput && waterInput <= 1500) {
         return "wet";
     }
 
@@ -463,17 +483,45 @@ function setWater(waterInput) {
     return null;
 }
 
+function setHumidity(humidityInput) {
+    if (30 <= humidityInput && humidityInput <= 50) {
+        return "low";
+    }
+    else if (50 < humidityInput && humidityInput <= 75) {
+        return "high";
+    }
+
+    console.log("Given humidity value", humidityInput, "is not in the value range!");
+    return null;
+}
+
+function setLight(lightInput) {
+    if (4 <= lightInput && lightInput <= 7) {
+        return "short";
+    }
+    else if (7 < lightInput && lightInput <= 11) {
+        return "long";
+    }
+
+    console.log("Given light value", lightInput, "is not in the value range!");
+    return null;
+}
+
 //According to given values predicts and returns the prediction
-function predictTree(temperatureInput, waterInput) {
+function predictTree(temperatureInput, waterInput, humidityInput, lightInput) {
     //Set prediction values
     var temperature = setTemperature(temperatureInput);
     var water = setWater(waterInput);
+    var humidity = setHumidity(humidityInput);
+    var light = setLight(lightInput);
 
     //Do prediction
-    if (temperature != null && water != null) {
+    if (temperature != null && water != null && humidity != null && light != null) {
         return dt.predict({
             temperature: temperature,
-            water: water
+            water: water,
+            humidity: humidity,
+            light: light
         });
     }
 
@@ -482,9 +530,9 @@ function predictTree(temperatureInput, waterInput) {
 }
 
 //When called (from the UI) handles everything about prediction
-function handlePrediction(temperatureInput, waterInput) {
+function handlePrediction(temperatureInput, waterInput, humidityInput, lightInput) {
     //Predict the tree according to given values
-    predicted_class = predictTree(temperatureInput, waterInput);
+    predicted_class = predictTree(temperatureInput, waterInput, humidityInput, lightInput);
 
     if (predicted_class != null) {
         predictionCount++;
@@ -551,8 +599,8 @@ function createPanel(){
     var moveDown = { moveDown:function(){ transformOnZ(selectedObject,1); }};
     object.add(moveDown,'moveDown').name("Move it down");
 
-    const shadowSettings = settings.addFolder('Shadow Settings');
     //Shadows
+    const shadowSettings = settings.addFolder('Shadow Settings');
     //Turn ON and OFF directional light's Shadows (sun)
     var toggleShadowsButton = {
         add:function() {
@@ -657,21 +705,21 @@ function createPanel(){
     const parameterSettings = predictionSettings.addFolder("Parameters");
 
     const parameters = {
-        temperature:15,
-        water: 120,
-        humidity:0,
-        light:0,
+        temperature: 15,
+        water: 500,
+        humidity:40,
+        light: 6,
     };
-    parameterSettings.add(parameters, 'temperature', -45, 70, 1).name('Temperature');
-    parameterSettings.add(parameters, 'water', 100, 1000, 1).name('Water (in ml)');
-    parameterSettings.add(parameters, 'humidity', 0, 0, 1).name('Humidity');
-    parameterSettings.add(parameters, 'light', 0, 0, 1).name('Light');
+    parameterSettings.add(parameters, 'temperature', -30, 60, 1).name('Temperature  (C)');
+    parameterSettings.add(parameters, 'water', 20, 1500, 10).name('Water  (ml / week)');
+    parameterSettings.add(parameters, 'humidity', 30, 75, 5).name('Humidity  (%)');
+    parameterSettings.add(parameters, 'light', 4, 11, 1).name('Light  (h / day)');
 
     //Take inputs from UI and call when prediction button is clicked
     var predictionButton = {
         add:function(){
             console.log("Start Prediction button clicked.");
-            handlePrediction(parameters.temperature, parameters.water);
+            handlePrediction(parameters.temperature, parameters.water, parameters.humidity, parameters.light);
         }
     };
     predictionSettings.add(predictionButton,'add').name("Start Prediction");
