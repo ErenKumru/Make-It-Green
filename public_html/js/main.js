@@ -265,18 +265,18 @@ function main(){
     animate();
 }
 
-var timePassed;
+/*
+day cycle: ~45 seconds in real life
+night cycle: ~45 seconds in real life
+total cycle: ~90 seconds in real life
+ */
 function dayAndNightCycle() {
-    timePassed = performance.now() / 37500;
+    var timePassed = performance.now() / 15000;
     directionalLight.position.y = Math.sin(timePassed) * 30;
     directionalLight.position.x = Math.cos(timePassed) * 30 - directionalLight.position.y;
     directionalLight.position.z = Math.cos(timePassed) * 30;
     directionalLight.intensity = Math.max(Math.sin(timePassed), 0);
-    if(directionalLight.position.y <= 0) {
-        directionalLight.intensity = 0;
-        timePassed = performance.now() / 12500;
-    }
-    else if(directionalLight.position.y > 0) timePassed = performance.now() / 37500;
+    if(directionalLight.position.y <= 0) directionalLight.intensity = 0;
 }
 
 function onWindowResize() {
