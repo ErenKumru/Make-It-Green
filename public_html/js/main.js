@@ -36,7 +36,7 @@ var loadingManager = null;
 var RESOURCES_LOADED = false;
 
 // loaded models
-var cactusModel, poplarTreeModel, pineTreeModel, appleTreeModel, fenceModel, shedModel;
+var cactusModel, poplarTreeModel, pineTreeModel, appleTreeModel, fenceModel, shedModel, wheelbarrowModel;
 
 // Add every object to this array
 var sceneObjects = [];
@@ -109,7 +109,6 @@ function main(){
     
     // To resize the window
     window.addEventListener( 'resize', onWindowResize, false );
-    document.addEventListener( 'wheel', onMouseWheel, false );
     
     //RENDERER
     renderer = new THREE.WebGLRenderer();
@@ -934,6 +933,8 @@ function appleTreeGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/apple_tree/AppleTree.gltf', function(gltf){
         const mesh = gltf.scene;
+        // Scale it a little
+        mesh.scale.set(1.5,1.5,1.5);
          // Cast and recieve shadow
         mesh.traverse( function( node ) {
             if ( node.isMesh ) {
@@ -959,6 +960,8 @@ function poplarTreeGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/white_poplar_tree/poplar_tree.gltf', function(gltf){
         const mesh = gltf.scene;
+        // Scale it a little
+        mesh.scale.set(1.5,1.5,1.5);
          // Cast and recieve shadow
         mesh.traverse( function( node ) {
             if ( node.isMesh ) {
@@ -985,6 +988,8 @@ function pineTreeGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/pine/pine.gltf', function(gltf){
         const mesh = gltf.scene;    
+        // Scale it a little
+        mesh.scale.set(1.5,1.5,1.5);
         // Cast and recieve shadow
         mesh.traverse( function( node ) {
             if ( node.isMesh ) {
@@ -1010,6 +1015,8 @@ function cactusGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/cactus/cactus.gltf', function(gltf){
         const mesh = gltf.scene;     
+        // Scale it a little
+        mesh.scale.set(1.5,1.5,1.5);
          // Cast and recieve shadow
         mesh.traverse( function( node ) {
             if ( node.isMesh ) {
@@ -1064,6 +1071,9 @@ function shedGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/shed/shed.gltf', function(gltf){
         const mesh = gltf.scene;     
+        // Scale it a little
+        mesh.scale.set(2,2,2);
+        mesh.rotation.y = Math.PI / 2;
          // Cast and recieve shadow
         mesh.traverse( function( node ) {
             if ( node.isMesh ) {
@@ -1077,8 +1087,29 @@ function shedGLTF(){
             }
         });
         mesh.name = "shed";
-        mesh.children[0].userData.draggable = true;
+        mesh.userData.draggable = true;
         shedModel = mesh;
+    });
+}
+function wheelbarrowGLTF(){
+    const loader = new GLTFLoader(loadingManager);
+    loader.load('./models/wheelbarrow/wheelbarrow.gltf', function(gltf){
+        const mesh = gltf.scene;     
+         // Cast and recieve shadow
+        mesh.traverse( function( node ) {
+            if ( node.isMesh ) {
+                node.material = new THREE.MeshToonMaterial({
+                    color: node.material.color,
+                    map: node.material.map
+                });
+
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
+        mesh.name = "wheelbarrow";
+        mesh.children[0].userData.draggable = true;
+        wheelbarrowModel = mesh;
     });
 }
 
@@ -1088,7 +1119,7 @@ function rotateAboutXAxis(object, rad){
             if ( child instanceof THREE.Mesh ){
                child.rotation.x = rad;
             }
-        });
+        }); 
    }
 }
 function rotateAboutYAxis(object, rad){
@@ -1139,10 +1170,6 @@ function transformOnZ(object, amount){
 }
 
 
-function onMouseWheel( event ) {
-  camera.position.z += event.deltaY * 0.01; // move camera along z-axis
-}
-
 function cameraControls(){
     const delta = 0.005;
 
@@ -1167,6 +1194,7 @@ function loadModels(){
     pineTreeGLTF();
     fenceGLTF();
     shedGLTF();
+    wheelbarrowGLTF();
 }
 
 function addCactus(position){
@@ -1210,19 +1238,87 @@ function addShed(position){
     sceneObjects.push(newShed);
     scene.add(newShed); 
 }
-function onResourcesLoaded(){
-    // X should be between -80 -40
-    addAppleTree(new THREE.Vector3( -77, 0, 20 ));
-    addAppleTree(new THREE.Vector3( -55, 0, 14 ));
-    addAppleTree(new THREE.Vector3( -64, 0, 12 ));
-    addAppleTree(new THREE.Vector3( -45, 0, 34 ));
-    addAppleTree(new THREE.Vector3( -57, 0, 45 ));
+
+function addWheelbarrow(position){
+    var newWheelbarrow = wheelbarrowModel.clone();
+    newWheelbarrow.position.set(position.x, position.y, position.z);
+    sceneObjects.push(newWheelbarrow);
+    scene.add(newWheelbarrow); 
+}
+
+function onResourcesLoaded(){ 
+    //APPLE TREES
+    addAppleTree(new THREE.Vector3( -4, 0, -3 ));
+    addAppleTree(new THREE.Vector3( -8, 0, -7 ));
+    addAppleTree(new THREE.Vector3( -12, 0, -3 ));
+    addAppleTree(new THREE.Vector3( -16, 0, -7 ));
+    addAppleTree(new THREE.Vector3( -20, 0, -3 ));
+    addAppleTree(new THREE.Vector3( -24, 0, -7 ));
+    addAppleTree(new THREE.Vector3( -28, 0, -3 ));
+    addAppleTree(new THREE.Vector3( -32, 0, -7 ));
+    addAppleTree(new THREE.Vector3( -36, 0, -3 ));
+    addAppleTree(new THREE.Vector3( -8, 0, -1 ));
+    addAppleTree(new THREE.Vector3( -16, 0, -1 ));
+    addAppleTree(new THREE.Vector3( -24, 0, -1 ));
+    addAppleTree(new THREE.Vector3( -32, 0, -1 ));
     
-    addCactus(new THREE.Vector3( -5, 0, 2 ));
-    addPineTree(new THREE.Vector3( -3, 0, 5 ));
-    addPoplarTree(new THREE.Vector3( 0, 0, 2 ));
-  
-    addShed(new THREE.Vector3( 50, 0, -50 ));
+    //PINE TREES
+    addPineTree(new THREE.Vector3( 4, 0, -3 ));
+    addPineTree(new THREE.Vector3( 8, 0, -7 ));
+    addPineTree(new THREE.Vector3( 12, 0, -3 ));
+    addPineTree(new THREE.Vector3( 16, 0, -7 ));
+    addPineTree(new THREE.Vector3( 20, 0, -3 ));
+    addPineTree(new THREE.Vector3( 24, 0, -7 ));
+    addPineTree(new THREE.Vector3( 28, 0, -3 ));
+    addPineTree(new THREE.Vector3( 32, 0, -7 ));
+    addPineTree(new THREE.Vector3( 36, 0, -3 ));
+    addPineTree(new THREE.Vector3( 39, 0, -7 ));
+    addPineTree(new THREE.Vector3( 8, 0, -1 ));
+    addPineTree(new THREE.Vector3( 16, 0, -1 ));
+    addPineTree(new THREE.Vector3( 24, 0, -1 ));
+    addPineTree(new THREE.Vector3( 32, 0, -1 ));
+    addPineTree(new THREE.Vector3( 39, 0, -1 ));
+    
+    //CACTUS TREES
+    addCactus(new THREE.Vector3( -4, 0, 37 ));
+    addCactus(new THREE.Vector3( -8, 0, 33 ));
+    addCactus(new THREE.Vector3( -12, 0, 37 ));
+    addCactus(new THREE.Vector3( -16, 0, 33 ));
+    addCactus(new THREE.Vector3( -20, 0, 37 ));
+    addCactus(new THREE.Vector3( -24, 0, 33 ));
+    addCactus(new THREE.Vector3( -28, 0, 37 ));
+    addCactus(new THREE.Vector3( -32, 0, 33 ));
+    addCactus(new THREE.Vector3( -36, 0, 37 ));
+    addCactus(new THREE.Vector3( -39, 0, 33 ));
+    addCactus(new THREE.Vector3( -8, 0, 37 ));
+    addCactus(new THREE.Vector3( -16, 0, 33 ));
+    addCactus(new THREE.Vector3( -24, 0, 37 ));
+    addCactus(new THREE.Vector3( -32, 0, 33 ));
+    addCactus(new THREE.Vector3( -39, 0, 37 ));
+    
+    //POPLAR TREES
+    addPoplarTree(new THREE.Vector3( 4, 0, 37 ));
+    addPoplarTree(new THREE.Vector3( 8, 0, 33 ));
+    addPoplarTree(new THREE.Vector3( 12, 0, 37 ));
+    addPoplarTree(new THREE.Vector3( 16, 0, 33 ));
+    addPoplarTree(new THREE.Vector3( 20, 0, 37 ));
+    addPoplarTree(new THREE.Vector3( 24, 0, 33 ));
+    addPoplarTree(new THREE.Vector3( 28, 0, 37 ));
+    addPoplarTree(new THREE.Vector3( 32, 0, 33 ));
+    addPoplarTree(new THREE.Vector3( 36, 0, 37 ));
+    addPoplarTree(new THREE.Vector3( 39, 0, 33 ));
+    addPoplarTree(new THREE.Vector3( 8, 0, 37 ));
+    addPoplarTree(new THREE.Vector3( 16, 0, 33 ));
+    addPoplarTree(new THREE.Vector3( 24, 0, 37 ));
+    addPoplarTree(new THREE.Vector3( 32, 0, 33 ));
+    addPoplarTree(new THREE.Vector3( 39, 0, 37 ));
+    
+    //WHEELBARROW
+    addWheelbarrow(new THREE.Vector3( 30, 0, -50 ));
+    // SHED
+    addShed(new THREE.Vector3( 35, 0, -50 ));
+    
+    // FENCES
     for(let i = -36; i < 44; i += 6){
         addFence(new THREE.Vector3( -40, 0, i ),false);
     }
@@ -1230,7 +1326,7 @@ function onResourcesLoaded(){
         addFence(new THREE.Vector3( 40, 0, i ),false);
     }
     // Add rotated fences
-    for(let i = -36; i < 44; i += 6){
+    for(let i = -36; i < 30; i += 6){
         addFence(new THREE.Vector3( i, 0, -40 ),true);
     }
     for(let i = -36; i < 44; i += 6){
