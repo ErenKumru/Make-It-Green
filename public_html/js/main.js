@@ -9,9 +9,10 @@ import { OrbitControls } from './jsm/libs/OrbitControls.js';
 import { PointerLockControls } from './jsm/libs/PointerLockControls.js';
 import * as Shaders from "../shaders/Shaders";
 
-//Enable camera rotation with p button
-//Move camera right-left, forward-backward with arrow keys
-//Move camera up-down with page up-down keys
+//Enable camera rotation with R button
+//Move camera right-left, forward-backward with arrow or WASD keys
+//Move camera up-down with page 1-2 keys
+//Camera z rotation with Q E
 let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
@@ -36,11 +37,15 @@ var loadingManager = null;
 var RESOURCES_LOADED = false;
 
 // loaded models
-var cactusModel, poplarTreeModel, pineTreeModel, appleTreeModel, fenceModel, shedModel, wheelbarrowModel;
+var cactusModel, poplarTreeModel, pineTreeModel, appleTreeModel, fenceModel, shedModel, wheelbarrowModel, pondModel, millModel, sheepModel,deerModel, foxModel;
 
 // wheelbarrow object
 var wheelbarrow = null;
-
+var sheep1 = null; 
+var sheep2 = null;
+var deer1 = null;
+var deer2 = null;
+var fox1 = null;
 // start or stop the movement of wheelbarrow
 var moveWheelbarrow = false;
 
@@ -62,6 +67,8 @@ var pathIndex = 0;
 // command to put down tree after bringing it with wheelbarrow
 var putDownTree = false;
 
+// did wheelbarrow finished the path
+var wheelbarrowFinished = true;
 function main(){
      
     // SCENES
@@ -257,6 +264,22 @@ function main(){
         dayAndNightCycle();
         spanPredictedTree(predictedTreeModel);
         
+        // Animal movements
+        animalMovement(sheep1,[new THREE.Vector3(0, 0, -5),new THREE.Vector3(0, 0, -15), new THREE.Vector3(-15, 0, -15), new THREE.Vector3(-15, 0, -5)], 
+                [new THREE.Vector3(0, 0, -1),new THREE.Vector3(0, 0, -1),new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, 0, 1)]); 
+        animalMovement(sheep2,[new THREE.Vector3(-35, 0, -10),new THREE.Vector3(-35, 0, -15),
+            new THREE.Vector3(-25, 0, -15),new THREE.Vector3(-25, 0, -25),new THREE.Vector3(-15, 0, -25),
+            new THREE.Vector3(-15, 0, -35),new THREE.Vector3(-5, 0, -35),new THREE.Vector3(-5, 0, -30)], 
+                [new THREE.Vector3(0, 0, -1),new THREE.Vector3(0, 0, -1),new THREE.Vector3(1, 0, 0),new THREE.Vector3(0, 0, -1),new THREE.Vector3(1, 0, 0),new THREE.Vector3(0, 0, -1),new THREE.Vector3(1, 0, 0),new THREE.Vector3(0, 0, 1)]);
+        animalMovement(deer1,[new THREE.Vector3(5, 0, -25),new THREE.Vector3(5, 0, -35),
+            new THREE.Vector3(15, 0, -35),new THREE.Vector3(15, 0, -25),new THREE.Vector3(25, 0, -25),
+            new THREE.Vector3(25, 0, -35)],[new THREE.Vector3(0, 0, -1),new THREE.Vector3(0, 0, -1),new THREE.Vector3(1, 0, 0),new THREE.Vector3(0, 0, 1),new THREE.Vector3(1, 0, 0),new THREE.Vector3(0, 0, -1)]);
+        animalMovement(deer2,[new THREE.Vector3(5, 0, -5),new THREE.Vector3(5, 0, -10),
+            new THREE.Vector3(15, 0, -10),new THREE.Vector3(15, 0, -15),new THREE.Vector3(25, 0, -15),new THREE.Vector3(25, 0, -5)],
+            [new THREE.Vector3(0, 0, -1),new THREE.Vector3(0, 0, -1),new THREE.Vector3(1, 0, 0),new THREE.Vector3(0, 0, -1),new THREE.Vector3(1, 0, 0),new THREE.Vector3(0, 0, 1)]);
+        animalMovement(fox1,[new THREE.Vector3(4, 0, 0),new THREE.Vector3(20, 0, 0), new THREE.Vector3(20, 0, 15),new THREE.Vector3(5, 0, 15)], 
+                [new THREE.Vector3(1, 0, 0),new THREE.Vector3(1, 0, 0),new THREE.Vector3(0, 0, 1),new THREE.Vector3(-1, 0, 0)]);
+                       
     /*    if(moveRight){
             camera.position.x += 1.0;
         }
@@ -329,15 +352,21 @@ function keyEvents(){
 		case 'KeyD':
                     moveRight = true;
                     break;
-                case 'PageUp':
+                case 'Digit1':
                     moveUp = true;
                     camera.position.y += 0.5;
                     break;
-                case 'PageDown':
+                case 'Digit2':
                     moveDown = true;
                     camera.position.y -= 0.5;
                     break;
-                case 'KeyP':
+                case 'KeyQ':
+                    camera.rotation.z += 0.1;
+                    break;
+                case 'KeyE':
+                    camera.rotation.z -= 0.1;
+                    break;
+                case 'KeyR':
                     if(!controls.isLocked){
                         controls.lock();
                     }
@@ -816,7 +845,8 @@ function createPanel(){
     var predictionButton = {
         add:function(){
             console.log("Start Prediction button clicked.");
-            handlePrediction(parameters.temperature, parameters.water, parameters.humidity, parameters.light);
+            if(wheelbarrowFinished)
+                handlePrediction(parameters.temperature, parameters.water, parameters.humidity, parameters.light);
             // To make spotlight follow wheelbarrow
             changeSpotlightTarget = false;
         }
@@ -1192,11 +1222,124 @@ function wheelbarrowGLTF(){
             }
         });
         mesh.name = "wheelbarrow";
-        mesh.children[0].userData.draggable = true;
         wheelbarrowModel = mesh;
     });
 }
+function pondGLTF(){
+    const loader = new GLTFLoader(loadingManager);
+    loader.load('./models/pond/pond.gltf', function(gltf){
+        const mesh = gltf.scene;     
+        // Scale it a little
+        mesh.scale.set(0.2,0.2,0.2);
+        // Cast and recieve shadow
+        mesh.traverse( function( node ) {
+            if ( node.isMesh ) {
+                node.material = new THREE.MeshToonMaterial({
+                    color: node.material.color,
+                    map: node.material.map
+                });
 
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
+        mesh.name = "pond";
+        mesh.userData.draggable = true;
+        pondModel = mesh;
+    });
+}
+function millGLTF(){
+    const loader = new GLTFLoader(loadingManager);
+    loader.load('./models/mill/mill.gltf', function(gltf){
+        const mesh = gltf.scene;     
+        // Scale it a little
+        mesh.scale.set(4,4,4);
+        // Cast and recieve shadow
+        mesh.traverse( function( node ) {
+            if ( node.isMesh ) {
+                node.material = new THREE.MeshToonMaterial({
+                    color: node.material.color,
+                    map: node.material.map
+                });
+
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
+        mesh.name = "mill";
+        mesh.userData.draggable = true;
+        millModel = mesh;
+    });
+}
+function sheepGLTF(){
+    const loader = new GLTFLoader(loadingManager);
+    loader.load('./models/sheep/sheep.gltf', function(gltf){
+        const mesh = gltf.scene;     
+        // Scale it a little
+        mesh.scale.set(2,2,2);
+        // Cast and recieve shadow
+        mesh.traverse( function( node ) {
+            if ( node.isMesh ) {
+                node.material = new THREE.MeshToonMaterial({
+                    color: node.material.color,
+                    map: node.material.map
+                });
+
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
+        mesh.name = "sheep";
+        mesh.userData.draggable = true;
+        sheepModel = mesh;
+    });
+}
+function deerGLTF(){
+    const loader = new GLTFLoader(loadingManager);
+    loader.load('./models/deer/deer.gltf', function(gltf){
+        const mesh = gltf.scene;     
+        // Scale it a little
+        //mesh.scale.set(2,2,2);
+        // Cast and recieve shadow
+        mesh.traverse( function( node ) {
+            if ( node.isMesh ) {
+                node.material = new THREE.MeshToonMaterial({
+                    color: node.material.color,
+                    map: node.material.map
+                });
+
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
+        mesh.name = "deer";
+        mesh.userData.draggable = true;
+        deerModel = mesh;
+    });
+}
+function foxGLTF(){
+    const loader = new GLTFLoader(loadingManager);
+    loader.load('./models/fox/fox.gltf', function(gltf){
+        const mesh = gltf.scene;     
+        // Scale it a little
+        //mesh.scale.set(2,2,2);
+        // Cast and recieve shadow
+        mesh.traverse( function( node ) {
+            if ( node.isMesh ) {
+                node.material = new THREE.MeshToonMaterial({
+                    color: node.material.color,
+                    map: node.material.map
+                });
+
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
+        mesh.name = "fox";
+        mesh.userData.draggable = true;
+        foxModel = mesh;
+    });
+}
 function rotateAboutXAxis(object, rad){
     if(object != null){
         object.traverse( function (child){
@@ -1282,6 +1425,11 @@ function loadModels(){
     fenceGLTF();
     shedGLTF();
     wheelbarrowGLTF();
+    pondGLTF();
+    millGLTF();
+    sheepGLTF();
+    deerGLTF();
+    foxGLTF();
 }
 
 function addCactus(position){
@@ -1343,6 +1491,55 @@ function addWheelbarrow(position){
     scene.add(newWheelbarrow); 
 }
 
+function addPond(position){
+    var pond = pondModel.clone();
+    pond.position.set(position.x, position.y, position.z);
+    sceneObjects.push(pond);
+    scene.add(pond); 
+}
+
+function addMill(position){
+    var mill = millModel.clone();
+    mill.position.set(position.x, position.y, position.z);
+    sceneObjects.push(mill);
+    scene.add(mill); 
+}
+function addSheep(position, rotation){
+    var sheep = sheepModel.clone();
+    sheep.rotation.y = rotation;
+    sheep.position.set(position.x, position.y, position.z);
+    // for sheep movement path
+    sheep.userData.completeFirstPath = true;
+    sheep.userData.pathIndex = 0;
+    sheep.userData.returnPathIndex = 0;
+    sceneObjects.push(sheep);
+    scene.add(sheep); 
+    return sheep;
+}
+function addDeer(position, rotation){
+    var deer = deerModel.clone();
+    deer.rotation.y = rotation;
+    deer.position.set(position.x, position.y, position.z);
+    // for sheep movement path
+    deer.userData.completeFirstPath = true;
+    deer.userData.pathIndex = 0;
+    deer.userData.returnPathIndex = 0;
+    sceneObjects.push(deer);
+    scene.add(deer); 
+    return deer;
+}
+function addFox(position, rotation){
+    var fox = foxModel.clone();
+    fox.rotation.y = rotation;
+    fox.position.set(position.x, position.y, position.z);
+    // for sheep movement path
+    fox.userData.completeFirstPath = true;
+    fox.userData.pathIndex = 0;
+    fox.userData.returnPathIndex = 0;
+    sceneObjects.push(fox);
+    scene.add(fox); 
+    return fox;
+}
 function onResourcesLoaded(){ 
     //APPLE TREES
     addAppleTree(new THREE.Vector3( -20, 0, -35 ));
@@ -1351,9 +1548,8 @@ function onResourcesLoaded(){
     addAppleTree(new THREE.Vector3( -10, 0, -10 ));
     addAppleTree(new THREE.Vector3( -30, 0, -10 ));
     addAppleTree(new THREE.Vector3( -35, 0, -20 ));
-    addAppleTree(new THREE.Vector3( -35, 0, -5 ));
+    //addAppleTree(new THREE.Vector3( -35, 0, -5 ));
     addAppleTree(new THREE.Vector3( -5, 0, -5 ));
-    
     
     //PINE TREES
     addPineTree(new THREE.Vector3( 10, 0, -30 ));
@@ -1378,18 +1574,34 @@ function onResourcesLoaded(){
     
     //POPLAR TREES
     addPoplarTree(new THREE.Vector3( 5, 0, 5 ));
-    addPoplarTree(new THREE.Vector3( 20, 0, 10 ));
+    addPoplarTree(new THREE.Vector3( 15, 0, 10 ));
     addPoplarTree(new THREE.Vector3( 15, 0, 15 ));
     addPoplarTree(new THREE.Vector3( 5, 0, 20 ));
     addPoplarTree(new THREE.Vector3( 5, 0, 30 ));
     addPoplarTree(new THREE.Vector3( 20, 0, 35 ));
     addPoplarTree(new THREE.Vector3( 30, 0, 30 ));
 
+    // POND
+    addPond(new THREE.Vector3( 0, 0, 0 ));
+    
+    // MILL
+    addMill(new THREE.Vector3( -35, 0, -35 ));
     
     //WHEELBARROW
-    addWheelbarrow(new THREE.Vector3( 30, 0, -50 ));
+    addWheelbarrow(new THREE.Vector3( 30, 0, -45 ));
+    
+    //SHEEP
+    sheep1 = addSheep(new THREE.Vector3( 0, 0, -5 ), Math.PI/2);
+    sheep2 = addSheep(new THREE.Vector3( -35, 0, -10 ), Math.PI);
+    
+    // DEER
+    deer1 = addDeer(new THREE.Vector3( 5, 0, -25 ), Math.PI/2);
+    deer2 = addDeer(new THREE.Vector3( 5, 0, -5 ), Math.PI/2);
+    
+    // FOX
+    fox1 = addFox(new THREE.Vector3(4, 0, 0),Math.PI/2);
     // SHED
-    addShed(new THREE.Vector3( 35, 0, -50 ));
+    addShed(new THREE.Vector3( 35, 0, -45 ));
     
     // FENCES
     for(let i = -36; i < 44; i += 6){
@@ -1399,7 +1611,7 @@ function onResourcesLoaded(){
         addFence(new THREE.Vector3( 40, 0, i ),false);
     }
     // Add rotated fences
-    for(let i = -36; i < 30; i += 6){
+    for(let i = -36; i < 36; i += 6){
         addFence(new THREE.Vector3( i, 0, -40 ),true);
     }
     for(let i = -36; i < 44; i += 6){
@@ -1524,7 +1736,7 @@ function spanPredictedTree(treeObject){
     
     if(treeObject !== null){
         var direction = new THREE.Vector3();
-        direction.subVectors( new THREE.Vector3(35,1,-50), treeObject.position ).normalize();
+        direction.subVectors( new THREE.Vector3(35,1,-45), treeObject.position ).normalize();
 
         // scalar to simulate speed
         var speed = 0.1;
@@ -1541,19 +1753,19 @@ function spanPredictedTree(treeObject){
         }
         else{
             if(predictedTreeName === "Pine"){
-                wheelbarrowMovement([new THREE.Vector3(35,0,-50), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20)],
+                wheelbarrowMovement([new THREE.Vector3(35,0,-45), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20)],
                                [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0)]);
             }
             if(predictedTreeName === "Apple"){
-                wheelbarrowMovement([new THREE.Vector3(35,0,-50), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20), new THREE.Vector3(-20,0,-20)],
+                wheelbarrowMovement([new THREE.Vector3(35,0,-45), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20), new THREE.Vector3(-20,0,-20)],
                                [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0),new THREE.Vector3(-1,0,0)]);
             }
             if(predictedTreeName === "Cactus"){
-                wheelbarrowMovement([new THREE.Vector3(35,0,-50), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20), new THREE.Vector3(-20,0,-20), new THREE.Vector3(-20,0,20)],
+                wheelbarrowMovement([new THREE.Vector3(35,0,-45), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20), new THREE.Vector3(-20,0,-20), new THREE.Vector3(-20,0,20)],
                                [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0),new THREE.Vector3(-1,0,0),new THREE.Vector3(0,0,1)]);
             }
             if(predictedTreeName === "Poplar"){
-                wheelbarrowMovement([new THREE.Vector3(35,0,-50), new THREE.Vector3(35,0,-20),new THREE.Vector3(35,0,20),new THREE.Vector3(20,0,20)],
+                wheelbarrowMovement([new THREE.Vector3(35,0,-45), new THREE.Vector3(35,0,-20),new THREE.Vector3(35,0,20),new THREE.Vector3(20,0,20)],
                                [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0)]);
             }
             
@@ -1574,6 +1786,7 @@ function wheelbarrowMovement(path, directionArray){
     wheelbarrow.getWorldPosition(wheelbarrowPosition);
     
     if(pathIndex < len && moveWheelbarrow){
+        wheelbarrowFinished = false;
         var targetPosition = path[pathIndex];
          // Calculate direction
         var direction = new THREE.Vector3();
@@ -1612,25 +1825,26 @@ function wheelbarrowMovement(path, directionArray){
         returnBase();
     }
 }
+
 var returnPathIndex = 0;
 var hasReturned = false;
 function returnBase(){
     var path, directionArray;
     if(predictedTreeName === "Pine"){
-        path = [new THREE.Vector3(35,0,-20), new THREE.Vector3(35,0,-50)];
-        directionArray = [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,-1)];
+        path = [new THREE.Vector3(35,0,-20), new THREE.Vector3(35,0,-45),new THREE.Vector3(30,0,-45)];
+        directionArray = [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,-1),new THREE.Vector3(-1,0,0)];
     }
     if(predictedTreeName === "Poplar"){
-        path = [new THREE.Vector3(35,0,20), new THREE.Vector3(35,0,-50)];
-        directionArray = [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,-1)];
+        path = [new THREE.Vector3(35,0,20), new THREE.Vector3(35,0,-45),new THREE.Vector3(30,0,-45)];
+        directionArray = [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,-1),new THREE.Vector3(-1,0,0)];
     }
     if(predictedTreeName === "Cactus"){
-        path = [new THREE.Vector3(-20,0,-20), new THREE.Vector3(35,0,-20), new THREE.Vector3(35,0,-50)];
-        directionArray = [new THREE.Vector3(0,0,-1), new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,-1)];
+        path = [new THREE.Vector3(-20,0,-20), new THREE.Vector3(35,0,-20), new THREE.Vector3(35,0,-45),new THREE.Vector3(30,0,-45)];
+        directionArray = [new THREE.Vector3(0,0,-1), new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,-1),new THREE.Vector3(-1,0,0)];
     }
     if(predictedTreeName === "Apple"){
-        path = [new THREE.Vector3(35,0,-20), new THREE.Vector3(35,0,-50)];
-        directionArray = [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,-1)];
+        path = [new THREE.Vector3(35,0,-20), new THREE.Vector3(35,0,-45), new THREE.Vector3(30,0,-45)];
+        directionArray = [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,-1), new THREE.Vector3(-1,0,0)];
     }
     
     let len = path.length;     
@@ -1667,8 +1881,87 @@ function returnBase(){
     else{
         returnPathIndex = 0;
         hasReturned = true;
+        wheelbarrowFinished = true;
     }
 }
+
+
+
+function animalMovement(sheep,path,directionArray){
+    if(sheep === null){
+        return;
+    }
+    
+    let len = path.length;
+      
+    // scalar to simulate speed
+    var speed = 0.1;
+    
+    // Get world position of sheep
+    var sheepPosition =  new THREE.Vector3();
+    sheep.getWorldPosition(sheepPosition);
+    
+    // direction for returning
+    var reverseDirectionArray = [ new THREE.Vector3(directionArray[len-1].x *-1.0, directionArray[len-1].y *-1.0, directionArray[len-1].z *-1.0)];
+    for(let i = len-1; i > 0;i--){
+        reverseDirectionArray.push(new THREE.Vector3(directionArray[i].x *-1.0, directionArray[i].y *-1.0, directionArray[i].z *-1.0));
+    }
+    
+    if(!sheep.userData.completeFirstPath){
+        var targetPosition = path[sheep.userData.pathIndex];
+         // Calculate direction
+        var direction = new THREE.Vector3();
+        direction.subVectors( targetPosition, sheepPosition ).normalize();
+        var vector = direction.multiplyScalar( speed, speed, speed );
+        
+        // Change its position until reached the target point
+        if(sheep.position.x.toFixed(0) !== targetPosition.x.toFixed(0) || sheep.position.z.toFixed(0) !== targetPosition.z.toFixed(0)){
+            rotateAnimal(sheep,directionArray[sheep.userData.pathIndex]);
+            sheep.position.x += vector.x;
+            sheep.position.y += vector.y;
+            sheep.position.z += vector.z;
+           
+        }
+        // Go to next point
+        else{
+            if(sheep.userData.pathIndex === len-1){
+                sheep.userData.completeFirstPath = true;
+            }
+            else sheep.userData.pathIndex++;
+        }
+    }
+    // finished the path
+    else{
+        var targetPosition = path[sheep.userData.pathIndex];
+        // Calculate direction
+        var direction = new THREE.Vector3();
+        direction.subVectors( targetPosition, sheepPosition ).normalize();
+        var vector = direction.multiplyScalar( speed, speed, speed );
+        
+        // Change its position until reached the target point
+        if(sheep.position.x.toFixed(0) !== targetPosition.x.toFixed(0) || sheep.position.z.toFixed(0) !== targetPosition.z.toFixed(0)){
+            rotateAnimal(sheep,reverseDirectionArray[sheep.userData.returnPathIndex]);          
+            sheep.position.x += vector.x;
+            sheep.position.y += vector.y;
+            sheep.position.z += vector.z;
+
+        }
+        // Go to next point
+        else{
+            if(sheep.userData.pathIndex === 0){
+                sheep.userData.completeFirstPath = false;
+                sheep.userData.returnPathIndex = 0;
+            }
+            else{
+                sheep.userData.pathIndex--;
+                sheep.userData.returnPathIndex++;
+            }
+        }
+    } 
+}
+
+ 
+
 function setSpotlightTarget(){
     if(changeSpotlightTarget === false){
         if(wheelbarrow !== null){
@@ -1702,6 +1995,20 @@ function rotateWheelbarrow(directionVector){
         wheelbarrow.rotation.y = 3*Math.PI/2;
     }
 }
+function rotateAnimal(sheep,directionVector){
 
+    if(directionVector.x === 1){
+        sheep.rotation.y = Math.PI/2;
+    }
+    if(directionVector.x === -1){
+        sheep.rotation.y = 3*Math.PI/2;
+    }
+    if(directionVector.z === 1){
+        sheep.rotation.y = 0;
+    }
+    if(directionVector.z === -1){
+        sheep.rotation.y = Math.PI;
+    }
+}
 
 main();		
