@@ -36,10 +36,32 @@ var loadingManager = null;
 var RESOURCES_LOADED = false;
 
 // loaded models
-var cactusModel, poplarTreeModel, pineTreeModel, appleTreeModel, fenceModel, shedModel;
+var cactusModel, poplarTreeModel, pineTreeModel, appleTreeModel, fenceModel, shedModel, wheelbarrowModel;
+
+// wheelbarrow object
+var wheelbarrow = null;
+
+// start or stop the movement of wheelbarrow
+var moveWheelbarrow = false;
 
 // Add every object to this array
 var sceneObjects = [];
+
+// predicted tree model
+var predictedTreeModel = null;
+
+// name of the predicted tree
+var predictedTreeName;
+
+// to allow user to change spotlight rotation
+var changeSpotlightTarget = false;
+
+// index of the path
+var pathIndex = 0;
+
+// command to put down tree after bringing it with wheelbarrow
+var putDownTree = false;
+
 function main(){
      
     // SCENES
@@ -109,7 +131,6 @@ function main(){
     
     // To resize the window
     window.addEventListener( 'resize', onWindowResize, false );
-    document.addEventListener( 'wheel', onMouseWheel, false );
     
     //RENDERER
     renderer = new THREE.WebGLRenderer();
@@ -224,7 +245,9 @@ function main(){
 
 
     var animate = function () {
+		
 
+        setSpotlightTarget();
         cameraControls();
 
         if(twist) {
@@ -232,7 +255,8 @@ function main(){
         }
 
         dayAndNightCycle();
-
+        spanPredictedTree(predictedTreeModel);
+        
     /*    if(moveRight){
             camera.position.x += 1.0;
         }
@@ -393,14 +417,16 @@ function initLights(){
     
     // Spotlight for specific illumination
     spotLight = new THREE.SpotLight(0xAAAAAA);
-    spotLight.position.set(0, 4, 0);
+    spotLight.position.set(0, 20, 0);
     spotLight.castShadow = true;
     spotLight.shadow.bias = 0.0001;
+    spotLight.angle = Math.PI / 18 ;
     spotLight.shadow.mapSize.width = 2048; // Shadow Quality
     spotLight.shadow.mapSize.height = 2048; // Shadow Quality
     scene.add(new THREE.CameraHelper(spotLight.shadow.camera)); // Help show light properties in the scene
-    scene.add(spotLight.target);
+    //scene.add(spotLight.target);
     scene.add(spotLight);
+    scene.add(spotLight.target);
     sceneObjects.push(spotLight);
 }
 
@@ -560,11 +586,18 @@ function handleGuess() {
 function handlePrediction(temperatureInput, waterInput, humidityInput, lightInput) {
     //Predict the tree according to given values
     predicted_class = predictTree(temperatureInput, waterInput, humidityInput, lightInput);
-
+    
     if (predicted_class != null) {
         handleGuess(); //Calculates points and shows right answers
 
         //TODO: Call tree instantiation and algorithm animation function here
+        
+        // Store the predicted tree model
+        predictedTreeModel = loadPredictedTree(predicted_class);
+        // Start the movements
+        moveWheelbarrow = true;
+        // To predict if wheelbarrow returned the base;
+        hasReturned = false;
     }
 }
 
@@ -601,17 +634,17 @@ function createPanel(){
     });
 
     // OBJECT TRANSFORM
-    var moveForward = { moveForward:function(){ transformOnY(selectedObject,1); }};
+    var moveForward = { moveForward:function(){ transformOnZ(selectedObject,1); }};
     object.add(moveForward,'moveForward').name("Move it forward");
-    var moveBackward = { moveBackward:function(){ transformOnY(selectedObject,-1); }};
+    var moveBackward = { moveBackward:function(){ transformOnZ(selectedObject,-1); }};
     object.add(moveBackward,'moveBackward').name("Move it backward");
     var moveRight = { moveRight:function(){ transformOnX(selectedObject,1); }};
     object.add(moveRight,'moveRight').name("Move it right");
     var moveLeft = { moveLeft:function(){ transformOnX(selectedObject,-1); }};
     object.add(moveLeft,'moveLeft').name("Move it left");
-    var moveUp = { moveUp:function(){ transformOnZ(selectedObject,-1); }};
+    var moveUp = { moveUp:function(){ transformOnY(selectedObject,1); }};
     object.add(moveUp,'moveUp').name("Move it up");
-    var moveDown = { moveDown:function(){ transformOnZ(selectedObject,1); }};
+    var moveDown = { moveDown:function(){ transformOnY(selectedObject,-1); }};
     object.add(moveDown,'moveDown').name("Move it down");
 
     //Shadows
@@ -640,6 +673,52 @@ function createPanel(){
         }
     }
     shadowSettings.add(toggleShadowsButton, 'add').name("Toggle Shadows");
+
+     // Spotlight Settings
+    const spotlight = settings.addFolder('Spotlight');
+    const spotlightSettings = {
+        intensity: spotLight.intensity,
+        'X Rotation':spotLight.target.position.x,
+        'Y Rotation':spotLight.target.position.y,
+        'Z Rotation':spotLight.target.position.z,
+    };
+    spotlight.add( spotlightSettings, 'intensity', 0, 2 ).onChange( function ( val ) {
+        spotLight.intensity = val;
+    } );
+    // light on/off
+    var lightTurnOnOff = { lightTurnOnOff:function(){ if(spotLight.visible === false){spotLight.visible = true;} else{spotLight.visible = false;} }};
+    spotlight.add(lightTurnOnOff,'lightTurnOnOff').name("Turn On/Off");
+    
+    // spotlight transformation rotation
+    // rotation
+    spotlight.add(spotlightSettings,'X Rotation',-100,100).onChange( function(val){
+        changeSpotlightTarget = true;
+        spotLight.target.position.x = val;
+    });
+    spotlight.add(spotlightSettings,'Y Rotation',-100,100).onChange( function(val){
+        changeSpotlightTarget = true;
+        spotLight.target.position.y = val;
+    });
+    spotlight.add(spotlightSettings,'Z Rotation',-100,100).onChange( function(val){
+        changeSpotlightTarget = true;
+        spotLight.target.position.z = val;
+    });
+    
+    // transformation
+    var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.x += 1; }};
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("x+");
+    var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.x -= 1; }};
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("x-");
+    var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.y += 1; }};
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("y+");
+    var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.y -= 1; }};
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("y-");
+    var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.z += 1; }};
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("z+");
+    var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.z -= 1; }};
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("z+");
+    
+    spotlight.close();
 
     //Shaders
     var isDefaultMaterial = true;
@@ -738,6 +817,8 @@ function createPanel(){
         add:function(){
             console.log("Start Prediction button clicked.");
             handlePrediction(parameters.temperature, parameters.water, parameters.humidity, parameters.light);
+            // To make spotlight follow wheelbarrow
+            changeSpotlightTarget = false;
         }
     };
     predictionSettings.add(predictionButton,'add').name("Start Prediction");
@@ -748,6 +829,8 @@ function createPanel(){
 
     // const cameraTilt = panel.addFolder('Camera Rotate Z');
     // cameraTilt.add(camera.rotation,"z",0,Math.PI * 2);
+    
+   
 }
 
 function twistScene() {
@@ -934,6 +1017,8 @@ function appleTreeGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/apple_tree/AppleTree.gltf', function(gltf){
         const mesh = gltf.scene;
+        // Scale it a little
+        mesh.scale.set(1.5,1.5,1.5);
          // Cast and recieve shadow
         mesh.traverse( function( node ) {
             if ( node.isMesh ) {
@@ -959,6 +1044,8 @@ function poplarTreeGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/white_poplar_tree/poplar_tree.gltf', function(gltf){
         const mesh = gltf.scene;
+        // Scale it a little
+        mesh.scale.set(1.5,1.5,1.5);
          // Cast and recieve shadow
         mesh.traverse( function( node ) {
             if ( node.isMesh ) {
@@ -985,6 +1072,8 @@ function pineTreeGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/pine/pine.gltf', function(gltf){
         const mesh = gltf.scene;    
+        // Scale it a little
+        mesh.scale.set(1.5,1.5,1.5);
         // Cast and recieve shadow
         mesh.traverse( function( node ) {
             if ( node.isMesh ) {
@@ -1010,6 +1099,8 @@ function cactusGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/cactus/cactus.gltf', function(gltf){
         const mesh = gltf.scene;     
+        // Scale it a little
+        mesh.scale.set(1.5,1.5,1.5);
          // Cast and recieve shadow
         mesh.traverse( function( node ) {
             if ( node.isMesh ) {
@@ -1064,6 +1155,9 @@ function shedGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/shed/shed.gltf', function(gltf){
         const mesh = gltf.scene;     
+        // Scale it a little
+        mesh.scale.set(2,2,2);
+        mesh.rotation.y = Math.PI / 2;
          // Cast and recieve shadow
         mesh.traverse( function( node ) {
             if ( node.isMesh ) {
@@ -1077,8 +1171,29 @@ function shedGLTF(){
             }
         });
         mesh.name = "shed";
-        mesh.children[0].userData.draggable = true;
+        mesh.userData.draggable = true;
         shedModel = mesh;
+    });
+}
+function wheelbarrowGLTF(){
+    const loader = new GLTFLoader(loadingManager);
+    loader.load('./models/wheelbarrow/wheelbarrow.gltf', function(gltf){
+        const mesh = gltf.scene;     
+         // Cast and recieve shadow
+        mesh.traverse( function( node ) {
+            if ( node.isMesh ) {
+                node.material = new THREE.MeshToonMaterial({
+                    color: node.material.color,
+                    map: node.material.map
+                });
+
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
+        mesh.name = "wheelbarrow";
+        mesh.children[0].userData.draggable = true;
+        wheelbarrowModel = mesh;
     });
 }
 
@@ -1088,7 +1203,7 @@ function rotateAboutXAxis(object, rad){
             if ( child instanceof THREE.Mesh ){
                child.rotation.x = rad;
             }
-        });
+        }); 
    }
 }
 function rotateAboutYAxis(object, rad){
@@ -1112,36 +1227,35 @@ function rotateAboutZAxis(object, rad){
 
 function transformOnX(object, amount){
     if(object != null && object.userData.draggable){
-        object.traverse( function (child){
+        /*object.traverse( function (child){
             if ( child instanceof THREE.Mesh ){
                child.position.x += amount;
             }
-        });
+        }); */
+        object.position.x += amount;
    }
 }
 function transformOnY(object, amount){
     if(object != null && object.userData.draggable){
-        object.traverse( function (child){
+        /*object.traverse( function (child){
             if ( child instanceof THREE.Mesh ){
                  child.position.y += amount;
             }
-        });
+        }); */
+        object.position.y += amount;
     } 
 }
 function transformOnZ(object, amount){
     if(object != null && object.userData.draggable){
-        object.traverse( function (child){
+        /*object.traverse( function (child){
             if ( child instanceof THREE.Mesh ){
                 child.position.z += amount;
             }
-        }); 
+        }); */
+        object.position.z += amount;
     }  
 }
 
-
-function onMouseWheel( event ) {
-  camera.position.z += event.deltaY * 0.01; // move camera along z-axis
-}
 
 function cameraControls(){
     const delta = 0.005;
@@ -1167,29 +1281,38 @@ function loadModels(){
     pineTreeGLTF();
     fenceGLTF();
     shedGLTF();
+    wheelbarrowGLTF();
 }
 
 function addCactus(position){
     var newCactus = cactusModel.clone();
     newCactus.position.set(position.x, position.y, position.z);
+     // Randomly rotate 
+    rotateAboutZAxis(newCactus, Math.floor(Math.random() * (0 - (2*Math.PI) + 1) + (2*Math.PI)));
     sceneObjects.push(newCactus);
     scene.add(newCactus); 
 }
 function addAppleTree(position){
     var newAppleTree = appleTreeModel.clone();
     newAppleTree.position.set(position.x, position.y, position.z);
+     // Randomly rotate 
+    rotateAboutZAxis(newAppleTree, Math.floor(Math.random() * (0 - (2*Math.PI) + 1) + (2*Math.PI)));
     sceneObjects.push(newAppleTree);
     scene.add(newAppleTree); 
 }
 function addPoplarTree(position){
     var newPoplarTree = poplarTreeModel.clone();
     newPoplarTree.position.set(position.x, position.y, position.z);
+    // Randomly rotate 
+    rotateAboutZAxis(newPoplarTree, Math.floor(Math.random() * (0 - (2*Math.PI) + 1) + (2*Math.PI)));
     sceneObjects.push(newPoplarTree);
     scene.add(newPoplarTree); 
 }
 function addPineTree(position){
     var newPineTree = pineTreeModel.clone();
     newPineTree.position.set(position.x, position.y, position.z);
+    // Randomly rotate 
+    rotateAboutZAxis(newPineTree, Math.floor(Math.random() * (0 - (2*Math.PI) + 1) + (2*Math.PI)));
     sceneObjects.push(newPineTree);
     scene.add(newPineTree); 
 }
@@ -1210,19 +1333,65 @@ function addShed(position){
     sceneObjects.push(newShed);
     scene.add(newShed); 
 }
-function onResourcesLoaded(){
-    // X should be between -80 -40
-    addAppleTree(new THREE.Vector3( -77, 0, 20 ));
-    addAppleTree(new THREE.Vector3( -55, 0, 14 ));
-    addAppleTree(new THREE.Vector3( -64, 0, 12 ));
-    addAppleTree(new THREE.Vector3( -45, 0, 34 ));
-    addAppleTree(new THREE.Vector3( -57, 0, 45 ));
+
+function addWheelbarrow(position){
+    var newWheelbarrow = wheelbarrowModel.clone();
+    newWheelbarrow.position.set(position.x, position.y, position.z);
+    newWheelbarrow.rotation.y = Math.PI;
+    wheelbarrow = newWheelbarrow;
+    sceneObjects.push(newWheelbarrow);
+    scene.add(newWheelbarrow); 
+}
+
+function onResourcesLoaded(){ 
+    //APPLE TREES
+    addAppleTree(new THREE.Vector3( -20, 0, -35 ));
+    addAppleTree(new THREE.Vector3( -30, 0, -30 ));
+    addAppleTree(new THREE.Vector3( -10, 0, -30 ));
+    addAppleTree(new THREE.Vector3( -10, 0, -10 ));
+    addAppleTree(new THREE.Vector3( -30, 0, -10 ));
+    addAppleTree(new THREE.Vector3( -35, 0, -20 ));
+    addAppleTree(new THREE.Vector3( -35, 0, -5 ));
+    addAppleTree(new THREE.Vector3( -5, 0, -5 ));
     
-    addCactus(new THREE.Vector3( -5, 0, 2 ));
-    addPineTree(new THREE.Vector3( -3, 0, 5 ));
-    addPoplarTree(new THREE.Vector3( 0, 0, 2 ));
-  
-    addShed(new THREE.Vector3( 50, 0, -50 ));
+    
+    //PINE TREES
+    addPineTree(new THREE.Vector3( 10, 0, -30 ));
+    addPineTree(new THREE.Vector3( 10, 0, -15 ));
+    addPineTree(new THREE.Vector3( 10, 0, -5 ));
+    addPineTree(new THREE.Vector3( 20, 0, -10 ));
+    addPineTree(new THREE.Vector3( 35, 0, -5 ));
+    addPineTree(new THREE.Vector3( 35, 0, -10 ));
+    addPineTree(new THREE.Vector3( 35, 0, -30 ));
+    addPineTree(new THREE.Vector3( 20, 0, -35 ));
+
+    
+    //CACTUS TREES
+    addCactus(new THREE.Vector3( -10, 0, 10 ));
+    addCactus(new THREE.Vector3( -30, 0, 10 ));
+    addCactus(new THREE.Vector3( -15, 0, 15 ));
+    addCactus(new THREE.Vector3( -5, 0, 25 ));
+    addCactus(new THREE.Vector3( -35, 0, 25 ));
+    addCactus(new THREE.Vector3( -30, 0, 35 ));
+    addCactus(new THREE.Vector3( -15, 0, 35 ));
+
+    
+    //POPLAR TREES
+    addPoplarTree(new THREE.Vector3( 5, 0, 5 ));
+    addPoplarTree(new THREE.Vector3( 20, 0, 10 ));
+    addPoplarTree(new THREE.Vector3( 15, 0, 15 ));
+    addPoplarTree(new THREE.Vector3( 5, 0, 20 ));
+    addPoplarTree(new THREE.Vector3( 5, 0, 30 ));
+    addPoplarTree(new THREE.Vector3( 20, 0, 35 ));
+    addPoplarTree(new THREE.Vector3( 30, 0, 30 ));
+
+    
+    //WHEELBARROW
+    addWheelbarrow(new THREE.Vector3( 30, 0, -50 ));
+    // SHED
+    addShed(new THREE.Vector3( 35, 0, -50 ));
+    
+    // FENCES
     for(let i = -36; i < 44; i += 6){
         addFence(new THREE.Vector3( -40, 0, i ),false);
     }
@@ -1230,7 +1399,7 @@ function onResourcesLoaded(){
         addFence(new THREE.Vector3( 40, 0, i ),false);
     }
     // Add rotated fences
-    for(let i = -36; i < 44; i += 6){
+    for(let i = -36; i < 30; i += 6){
         addFence(new THREE.Vector3( i, 0, -40 ),true);
     }
     for(let i = -36; i < 44; i += 6){
@@ -1326,4 +1495,213 @@ function createPlanes(){
     sceneObjects.push(plane5);
     
 }
+
+function loadPredictedTree(treeType){
+    predictedTreeName = treeType;
+    putDownTree = false;
+    var predictedTreeModel;
+    if(treeType === "Poplar")
+        predictedTreeModel = poplarTreeModel;
+    if(treeType === "Pine")
+        predictedTreeModel = pineTreeModel;
+    if(treeType === "Apple")
+        predictedTreeModel = appleTreeModel;
+    if(treeType === "Cactus")
+        predictedTreeModel = cactusModel;
+    
+    if(predictedTreeModel !== null){
+        var newTree = predictedTreeModel.clone();
+        newTree.position.set(35, -2 ,-50);
+        sceneObjects.push(newTree);
+        scene.add(newTree);  
+        return newTree;
+    }
+   
+   
+}
+
+function spanPredictedTree(treeObject){
+    
+    if(treeObject !== null){
+        var direction = new THREE.Vector3();
+        direction.subVectors( new THREE.Vector3(35,1,-50), treeObject.position ).normalize();
+
+        // scalar to simulate speed
+        var speed = 0.1;
+
+        var vector = direction.multiplyScalar( speed, speed, speed );
+        
+        if(treeObject.position.y < 1 && !putDownTree){
+            treeObject.position.x += vector.x;
+            treeObject.position.y += vector.y;
+            treeObject.position.z += vector.z; 
+
+            // Rotation
+            treeObject.rotation.y += 0.1;
+        }
+        else{
+            if(predictedTreeName === "Pine"){
+                wheelbarrowMovement([new THREE.Vector3(35,0,-50), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20)],
+                               [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0)]);
+            }
+            if(predictedTreeName === "Apple"){
+                wheelbarrowMovement([new THREE.Vector3(35,0,-50), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20), new THREE.Vector3(-20,0,-20)],
+                               [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0),new THREE.Vector3(-1,0,0)]);
+            }
+            if(predictedTreeName === "Cactus"){
+                wheelbarrowMovement([new THREE.Vector3(35,0,-50), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20), new THREE.Vector3(-20,0,-20), new THREE.Vector3(-20,0,20)],
+                               [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0),new THREE.Vector3(-1,0,0),new THREE.Vector3(0,0,1)]);
+            }
+            if(predictedTreeName === "Poplar"){
+                wheelbarrowMovement([new THREE.Vector3(35,0,-50), new THREE.Vector3(35,0,-20),new THREE.Vector3(35,0,20),new THREE.Vector3(20,0,20)],
+                               [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0)]);
+            }
+            
+        }
+        
+    }     
+}
+
+// Animation of wheelbarrow
+function wheelbarrowMovement(path, directionArray){
+    let len = path.length;
+      
+    // scalar to simulate speed
+    var speed = 0.1;
+    
+    // Get world position of wheelbarrow
+    var wheelbarrowPosition =  new THREE.Vector3();
+    wheelbarrow.getWorldPosition(wheelbarrowPosition);
+    
+    if(pathIndex < len && moveWheelbarrow){
+        var targetPosition = path[pathIndex];
+         // Calculate direction
+        var direction = new THREE.Vector3();
+        direction.subVectors( targetPosition, wheelbarrowPosition ).normalize();
+        var vector = direction.multiplyScalar( speed, speed, speed );
+        
+        // Change its position until reached the target point
+        if(wheelbarrow.position.x.toFixed(1) !== targetPosition.x.toFixed(1) || wheelbarrow.position.z.toFixed(1) !== targetPosition.z.toFixed(1)){
+            rotateWheelbarrow(directionArray[pathIndex]);
+           
+            wheelbarrow.position.x += vector.x;
+            wheelbarrow.position.y += vector.y;
+            wheelbarrow.position.z += vector.z;
+            
+            if(pathIndex !== 0){
+                 // Move the tree with wheel
+                predictedTreeModel.position.x += vector.x;
+                //predictedTreeModel.position.y += vector.y;
+                predictedTreeModel.position.z += vector.z;              
+            }
+           
+        }
+        // Go to next point
+        else{
+            pathIndex++;
+        }
+    }
+    // finished the path
+    else{
+        pathIndex = 0;
+        moveWheelbarrow = false;
+        predictedTreeModel.userData.draggable = true;
+        putDownTree = true;
+        if(predictedTreeModel.position.y > 0) predictedTreeModel.position.y -= 0.1;
+        //transformOnY(predictedTreeModel, -0.5);
+        returnBase();
+    }
+}
+var returnPathIndex = 0;
+var hasReturned = false;
+function returnBase(){
+    var path, directionArray;
+    if(predictedTreeName === "Pine"){
+        path = [new THREE.Vector3(35,0,-20), new THREE.Vector3(35,0,-50)];
+        directionArray = [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,-1)];
+    }
+    if(predictedTreeName === "Poplar"){
+        path = [new THREE.Vector3(35,0,20), new THREE.Vector3(35,0,-50)];
+        directionArray = [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,-1)];
+    }
+    if(predictedTreeName === "Cactus"){
+        path = [new THREE.Vector3(-20,0,-20), new THREE.Vector3(35,0,-20), new THREE.Vector3(35,0,-50)];
+        directionArray = [new THREE.Vector3(0,0,-1), new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,-1)];
+    }
+    if(predictedTreeName === "Apple"){
+        path = [new THREE.Vector3(35,0,-20), new THREE.Vector3(35,0,-50)];
+        directionArray = [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,-1)];
+    }
+    
+    let len = path.length;     
+    
+    // scalar to simulate speed
+    var speed = 0.1;
+    
+    // Get world position of wheelbarrow
+    var wheelbarrowPosition =  new THREE.Vector3();
+    wheelbarrow.getWorldPosition(wheelbarrowPosition);
+    
+
+    if(returnPathIndex < len && !hasReturned){
+        var targetPosition = path[returnPathIndex];
+         // Calculate direction
+        var direction = new THREE.Vector3();
+        direction.subVectors( targetPosition, wheelbarrowPosition ).normalize();
+        var vector = direction.multiplyScalar( speed, speed, speed );
+        
+        // Change its position until reached the target point
+        if(wheelbarrow.position.x.toFixed(1) !== targetPosition.x.toFixed(1) || wheelbarrow.position.z.toFixed(1) !== targetPosition.z.toFixed(1)){
+            rotateWheelbarrow(directionArray[returnPathIndex]);           
+            wheelbarrow.position.x += vector.x;
+            wheelbarrow.position.y += vector.y;
+            wheelbarrow.position.z += vector.z;
+
+        }
+        // Go to next point
+        else{
+            returnPathIndex++;
+        }
+    }
+    // finished the path
+    else{
+        returnPathIndex = 0;
+        hasReturned = true;
+    }
+}
+function setSpotlightTarget(){
+    if(changeSpotlightTarget === false){
+        if(wheelbarrow !== null){
+           /* wheelbarrow.traverse( function (child){
+                if ( child instanceof THREE.Mesh ){
+                    spotLight.target = child;
+                }   
+            }); */
+            // Get world position of wheelbarrow
+            var wheelbarrowPosition =  new THREE.Vector3();
+            wheelbarrow.getWorldPosition(wheelbarrowPosition);
+            spotLight.target.position.x = wheelbarrowPosition.x;
+            spotLight.target.position.y = wheelbarrowPosition.y;
+            spotLight.target.position.z = wheelbarrowPosition.z;
+        }
+    }
+}
+
+// Rotate it with respect to its movement direction
+function rotateWheelbarrow(directionVector){
+    if(directionVector.x === 1){
+        wheelbarrow.rotation.y = Math.PI;
+    }
+    if(directionVector.x === -1){
+        wheelbarrow.rotation.y = 0;
+    }
+    if(directionVector.z === 1){
+        wheelbarrow.rotation.y = Math.PI/2;
+    }
+    if(directionVector.z === -1){
+        wheelbarrow.rotation.y = 3*Math.PI/2;
+    }
+}
+
+
 main();		
