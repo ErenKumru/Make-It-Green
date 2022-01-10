@@ -1620,14 +1620,15 @@ function loadPredictedTree(treeType){
         predictedTreeModel = cactusModel;
     
     if(predictedTreeModel !== null){
-        var newTree = predictedTreeModel.clone();
+        //var newTree = predictedTreeModel.clone();
+        var newTree = predictedTreeModel.deepClone();
         newTree.name = "tree";
-        newTree.position.set(35, -2 ,-50);
+        newTree.position.set(35, -2 ,-50); 
         sceneObjects.push(newTree);
         scene.add(newTree);  
         return newTree;
-    }
-   
+    }  
+  
    
 }
 
@@ -1726,6 +1727,7 @@ function wheelbarrowMovement(path, directionArray){
         if(predictedTreeModel.position.y > 0){
             if(previousTree !== null) {
                 if(previousTree.userData.name === predictedTreeModel.userData.name){
+
                     scene.remove(previousTree);
                 }
                 
@@ -1921,5 +1923,59 @@ function rotateAnimal(sheep,directionVector){
         sheep.rotation.y = Math.PI;
     }
 }
+THREE.Object3D.prototype.deepClone = function ( recursive ) {
 
+    return new this.constructor().deepCopy( this, recursive );
+
+},
+THREE.Object3D.prototype.deepCopy = function( source, recursive ) {
+
+        if ( recursive === undefined ) recursive = true;
+
+        this.name = source.name;
+
+        this.up.copy( source.up );
+
+        this.position.copy( source.position );
+        this.quaternion.copy( source.quaternion );
+        this.scale.copy( source.scale );
+
+        this.matrix.copy( source.matrix );
+        this.matrixWorld.copy( source.matrixWorld );
+        if(source.material){
+            //changed
+            this.material = source.material.clone()
+        }
+        if(source.geometry){
+            //changed
+            this.geometry = source.geometry.clone()
+        }
+        this.matrixAutoUpdate = source.matrixAutoUpdate;
+        this.matrixWorldNeedsUpdate = source.matrixWorldNeedsUpdate;
+
+        this.layers.mask = source.layers.mask;
+        this.visible = source.visible;
+
+        this.castShadow = source.castShadow;
+        this.receiveShadow = source.receiveShadow;
+
+        this.frustumCulled = source.frustumCulled;
+        this.renderOrder = source.renderOrder;
+
+        this.userData = JSON.parse( JSON.stringify( source.userData ) );
+
+        if ( recursive === true ) {
+
+            for ( var i = 0; i < source.children.length; i ++ ) {
+
+                var child = source.children[ i ];
+                this.add( child.deepClone() ); //changed
+
+            }
+
+        }
+
+        return this;
+
+    }
 main();		
