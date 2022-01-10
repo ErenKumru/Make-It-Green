@@ -46,6 +46,7 @@ var sheep2 = null;
 var deer1 = null;
 var deer2 = null;
 var fox1 = null;
+
 // start or stop the movement of wheelbarrow
 var moveWheelbarrow = false;
 
@@ -69,6 +70,9 @@ var putDownTree = false;
 
 // did wheelbarrow finished the path
 var wheelbarrowFinished = true;
+
+// previous predicted tree
+var previousTree = null;
 function main(){
      
     // SCENES
@@ -537,7 +541,7 @@ function handlePrediction(temperatureInput, waterInput, humidityInput, lightInpu
     
     if (predicted_class != null && hasReturned) {
         handleGuess(); //Calculates points and shows right answers
-
+        previousTree = predictedTreeModel;
         // Store the predicted tree model
         predictedTreeModel = loadPredictedTree(predicted_class);
         // Start the movements
@@ -1648,18 +1652,22 @@ function spanPredictedTree(treeObject){
         }
         else{
             if(predictedTreeName === "Pine"){
+                treeObject.userData.name = "pine";
                 wheelbarrowMovement([new THREE.Vector3(35,0,-45), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20)],
                                [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0)]);
             }
             if(predictedTreeName === "Apple"){
+                treeObject.userData.name = "apple";
                 wheelbarrowMovement([new THREE.Vector3(35,0,-45), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20), new THREE.Vector3(-20,0,-20)],
                                [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0),new THREE.Vector3(-1,0,0)]);
             }
             if(predictedTreeName === "Cactus"){
+                treeObject.userData.name = "Cactus";
                 wheelbarrowMovement([new THREE.Vector3(35,0,-45), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20), new THREE.Vector3(-20,0,-20), new THREE.Vector3(-20,0,20)],
                                [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0),new THREE.Vector3(-1,0,0),new THREE.Vector3(0,0,1)]);
             }
             if(predictedTreeName === "Poplar"){
+                treeObject.userData.name = "Poplar";
                 wheelbarrowMovement([new THREE.Vector3(35,0,-45), new THREE.Vector3(35,0,-20),new THREE.Vector3(35,0,20),new THREE.Vector3(20,0,20)],
                                [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0)]);
             }
@@ -1715,7 +1723,15 @@ function wheelbarrowMovement(path, directionArray){
         moveWheelbarrow = false;
         predictedTreeModel.userData.draggable = true;
         putDownTree = true;
-        if(predictedTreeModel.position.y > 0) predictedTreeModel.position.y -= 0.1;
+        if(predictedTreeModel.position.y > 0){
+            if(previousTree !== null) {
+                if(previousTree.userData.name === predictedTreeModel.userData.name){
+                    scene.remove(previousTree);
+                }
+                
+            }
+            predictedTreeModel.position.y -= 0.1;
+        }
         //transformOnY(predictedTreeModel, -0.5);
         returnBase();
     }
