@@ -161,64 +161,6 @@ function main(){
     controls.update();  */
     
     controls = new PointerLockControls( camera, renderer.domElement );
- 
-    
-    // const material = new THREE.ShaderMaterial({
-    //     vertexShader: vertexShader3,
-    //     fragmentShader: fragmentShader3,
-    //     uniforms:{
-    //         color1: {
-    //             value: new THREE.Color("purple")
-    //         },
-    //         color2: {
-    //             value: new THREE.Color("red")
-    //         }
-    //     }
-    // });
-
-    //Shadow material
-    // const basicCustomShaderMaterial = new THREE.ShaderMaterial({
-    //   ...BasicCustomShader,
-    //   fog: true,
-    //   lights: true,
-    //   dithering: true,
-    // });
-
-    //-----------------NEW SHADER TEST STARTS-------------------------------------------------------------------------//
-    //soil land block created via buildTwistMaterial
-    // var time = 0;
-    // var geometry = new THREE.BoxGeometry(2, 2, 2);
-    // var soilLand = new THREE.Mesh(geometry, buildTwistMaterial(5, time));
-    // soilLand.name = "soilLand";
-    // soilLand.userData.draggable = true;
-    // soilLand.castShadow = true;
-    // soilLand.receiveShadow = true;
-    // soilLand.position.y += 1;
-    // soilLand.position.z -= 3;
-    // soilLand.position.x -= 3;
-    // scene.add(soilLand);
-    // sceneObjects.push(soilLand);
-
-    // //stone cube custom phong shader parameters
-    // var Ka = new THREE.Vector3(0.53, 0.55, 0.55); //stone gray color
-    // var Kd = new THREE.Vector3(0.55, 0.55, 0.55); //stone gray light reflecting face color
-    // var Ks = new THREE.Vector3(0.6, 0.6, 0.6); //reflected light color (gray to white)
-    // var lightIntensity = new THREE.Vector4(0.4, 0.4, 0.4, 1.0);
-    // var lightPosition = new THREE.Vector4(0.0, 20000.0, 0.0, 1.0);
-    // var shininess = 25; //diffusing (unfocused)
-
-    // //stone cube block created via CustomPhongShader
-    // var angle = 0;
-    // var stoneCubeGeometry = new THREE.BoxGeometry(2, 2, 2);
-    // var stoneCube = new THREE.Mesh(stoneCubeGeometry, CustomPhongShader(Ka, Kd, Ks, lightIntensity, lightPosition, shininess));
-    // stoneCube.userData.draggable = true;
-    // stoneCube.castShadow = true;
-    // stoneCube.position.y += 1;
-    // stoneCube.position.z -= 3;
-    // stoneCube.position.x += 3;
-    // scene.add(stoneCube);
-    // sceneObjects.push(stoneCube);
-    //-----------------NEW SHADER TEST ENDS---------------------------------------------------------------------------//
 
     // add pine tree to scene
     /*  createPine(new THREE.Vector3( 0, 0, 0 ));
@@ -416,16 +358,6 @@ function initLights(){
     scene.add(ambientLight);
     //sceneDisplay.add(ambientLight);
     sceneObjects.push(ambientLight);
-    
-    // point light
-    // pointLight = new THREE.PointLight(0xffffff, 0.5, 120);
-    // pointLight.position.set(-3, 60, -3);
-    // pointLight.castShadow = true;
-    // pointLight.shadow.camera.near = 0.1;
-    // pointLight.shadow.camera.far = 64;
-    // scene.add(new THREE.CameraHelper(pointLight.shadow.camera)); // Help show light properties in the scene
-    // scene.add(pointLight);
-    // sceneObjects.push(pointLight);
 
     // directional light
     directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
@@ -581,19 +513,6 @@ function predictTree(temperatureInput, waterInput, humidityInput, lightInput) {
     console.log("Some prediction value is wrong. Continuing without predicting!")
     return null;
 }
-
-/* Import/Export trained model
-//To export (save) trained model for future use
-var treeJson = dt.toJSON();
-console.log("treeJson: ", treeJson);
-//Create a new model
-var treeJson = dt.toJSON();
-var preTrainedDecisionTree = new DecisionTree(treeJson);
-//Alternately, you can also import a previously trained model on an existing tree instance,
-assuming the features & class are the same:
-var treeJson = dt.toJSON();
-dt.import(treeJson);
-*/
 //-----------------DECISION TREE ENDS------------------------------------------------------------------------//
 
 //Guess system with GUI
@@ -616,11 +535,9 @@ function handlePrediction(temperatureInput, waterInput, humidityInput, lightInpu
     //Predict the tree according to given values
     predicted_class = predictTree(temperatureInput, waterInput, humidityInput, lightInput);
     
-    if (predicted_class != null) {
+    if (predicted_class != null && hasReturned) {
         handleGuess(); //Calculates points and shows right answers
 
-        //TODO: Call tree instantiation and algorithm animation function here
-        
         // Store the predicted tree model
         predictedTreeModel = loadPredictedTree(predicted_class);
         // Start the movements
@@ -844,7 +761,6 @@ function createPanel(){
     //Take inputs from UI and call when prediction button is clicked
     var predictionButton = {
         add:function(){
-            console.log("Start Prediction button clicked.");
             if(wheelbarrowFinished)
                 handlePrediction(parameters.temperature, parameters.water, parameters.humidity, parameters.light);
             // To make spotlight follow wheelbarrow
@@ -1827,7 +1743,7 @@ function wheelbarrowMovement(path, directionArray){
 }
 
 var returnPathIndex = 0;
-var hasReturned = false;
+var hasReturned = true;
 function returnBase(){
     var path, directionArray;
     if(predictedTreeName === "Pine"){
