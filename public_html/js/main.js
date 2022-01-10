@@ -581,44 +581,17 @@ function createPanel(){
 
     // OBJECT TRANSFORM
     var moveForward = { moveForward:function(){ transformOnZ(selectedObject,1); }};
-    object.add(moveForward,'moveForward').name("Move it forward");
+    object.add(moveForward,'moveForward').name("Forward");
     var moveBackward = { moveBackward:function(){ transformOnZ(selectedObject,-1); }};
-    object.add(moveBackward,'moveBackward').name("Move it backward");
-    var moveRight = { moveRight:function(){ transformOnX(selectedObject,1); }};
-    object.add(moveRight,'moveRight').name("Move it right");
+    object.add(moveBackward,'moveBackward').name("Backward");
     var moveLeft = { moveLeft:function(){ transformOnX(selectedObject,-1); }};
-    object.add(moveLeft,'moveLeft').name("Move it left");
+    object.add(moveLeft,'moveLeft').name("Left");
+    var moveRight = { moveRight:function(){ transformOnX(selectedObject,1); }};
+    object.add(moveRight,'moveRight').name("Right");
     var moveUp = { moveUp:function(){ transformOnY(selectedObject,1); }};
-    object.add(moveUp,'moveUp').name("Move it up");
+    object.add(moveUp,'moveUp').name("Up");
     var moveDown = { moveDown:function(){ transformOnY(selectedObject,-1); }};
-    object.add(moveDown,'moveDown').name("Move it down");
-
-    //Shadows
-    const shadowSettings = settings.addFolder('Shadow Settings');
-
-    //Shadow Quality
-    var q = shadowSettings.add({q: "Medium"},'q', ["Low", "Medium", "High"]).name('Shadow Quality').onChange(shadowQuality);
-    var quality;
-    function shadowQuality() {
-        if(q.object.q === "Low")  quality = 1024;
-        else if(q.object.q === "Medium") quality = 2048;
-        else if(q.object.q === "High") quality = 4096;
-
-        directionalLight.shadow.map.dispose()
-        directionalLight.shadow.map = null
-        directionalLight.shadow.mapSize.width = quality; // Shadow Quality
-        directionalLight.shadow.mapSize.height = quality; // Shadow Quality
-    }
-
-    //Turn ON and OFF directional light's Shadows (sun)
-    var toggleShadowsButton = {
-        add:function() {
-            console.log("toggleShadowsButton is clicked");
-            directionalLight.castShadow = !directionalLight.castShadow;
-            spotLight.castShadow = !spotLight.castShadow;
-        }
-    }
-    shadowSettings.add(toggleShadowsButton, 'add').name("Toggle Shadows");
+    object.add(moveDown,'moveDown').name("Down");
 
      // Spotlight Settings
     const spotlight = settings.addFolder('Spotlight');
@@ -628,7 +601,7 @@ function createPanel(){
         'Y Rotation':spotLight.target.position.y,
         'Z Rotation':spotLight.target.position.z,
     };
-    spotlight.add( spotlightSettings, 'intensity', 0, 2 ).onChange( function ( val ) {
+    spotlight.add( spotlightSettings, 'intensity', 0, 2 ).name("Intensity").onChange( function ( val ) {
         spotLight.intensity = val;
     } );
     // light on/off
@@ -652,19 +625,43 @@ function createPanel(){
     
     // transformation
     var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.x += 1; }};
-    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("x+");
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("X+");
     var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.x -= 1; }};
-    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("x-");
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("X-");
     var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.y += 1; }};
-    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("y+");
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("Y+");
     var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.y -= 1; }};
-    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("y-");
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("Y-");
     var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.z += 1; }};
-    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("z+");
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("Z+");
     var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.z -= 1; }};
-    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("z+");
-    
-    spotlight.close();
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("Z-");
+
+    //Shadows
+    const shadowSettings = settings.addFolder('Shadow Settings');
+
+    //Shadow Quality
+    var q = shadowSettings.add({q: "Medium"},'q', ["Low", "Medium", "High"]).name('Shadow Quality').onChange(shadowQuality);
+    var quality;
+    function shadowQuality() {
+        if(q.object.q === "Low")  quality = 1024;
+        else if(q.object.q === "Medium") quality = 2048;
+        else if(q.object.q === "High") quality = 4096;
+
+        directionalLight.shadow.map.dispose()
+        directionalLight.shadow.map = null
+        directionalLight.shadow.mapSize.width = quality; // Shadow Quality
+        directionalLight.shadow.mapSize.height = quality; // Shadow Quality
+    }
+
+    //Turn ON and OFF directional light's Shadows (sun)
+    var toggleShadowsButton = {
+        add:function() {
+            directionalLight.castShadow = !directionalLight.castShadow;
+            spotLight.castShadow = !spotLight.castShadow;
+        }
+    }
+    shadowSettings.add(toggleShadowsButton, 'add').name("Toggle Shadows");
 
     //Shaders
     var isDefaultMaterial = true;
@@ -672,7 +669,6 @@ function createPanel(){
     var count = 0;
     var switchShadersButton = {
         add:function() {
-            console.log("switchShadersButton is clicked");
             sceneObjects.forEach(function(obj) {
                 if(obj.name === "plane") {
                     if(isDefaultMaterial) {
@@ -691,17 +687,19 @@ function createPanel(){
                 else if(obj.name === "tree") {
                     obj.traverse( function( node ) {
                         if ( node.isMesh ) {
-                            if(isDefaultMaterial) {
-                                defaultMaterials[count] = node.material;
-                                count++;
-                                node.material = Shaders.buildTwistMaterial(
-                                    18, performance.now, node.material.color, node.material.map
-                                )
-                                twist = true;
-                            }
-                            else {
-                                node.material = defaultMaterials[count];
-                                count++;
+                            if(node.material != null) {
+                                if(isDefaultMaterial) {
+                                    defaultMaterials[count] = node.material;
+                                    count++;
+                                    node.material = Shaders.buildTwistMaterial(
+                                        18, performance.now, node.material.color, node.material.map
+                                    )
+                                    twist = true;
+                                }
+                                else {
+                                    node.material = defaultMaterials[count];
+                                    count++;
+                                }
                             }
                         }
                     });
@@ -732,6 +730,7 @@ function createPanel(){
     settings.add(switchShadersButton, 'add').name("Switch Shaders");
 
     object.close();
+    spotlight.close();
     shadowSettings.close();
     settings.close();
     //Scene settings folder ends here
@@ -772,39 +771,18 @@ function createPanel(){
     // parameterSettings.close();
     predictionSettings.close();
     //Prediction settings folder ends here
-
-    // const cameraTilt = panel.addFolder('Camera Rotate Z');
-    // cameraTilt.add(camera.rotation,"z",0,Math.PI * 2);
-    
-   
 }
 
 function twistScene() {
     scene.traverse( function ( child ) {
-        // if ( child.isMesh ) {
-        //     if(child.name === "plane") {
-        //         const shader = child.material.userData.shader;
-        //         if ( shader ) {
-        //             shader.uniforms.time.value = performance.now() / 1000;
-        //         }
-        //     }
-        //     else if(child.name === "tree") {
-        //         child.traverse( function( node ) {
-        //             if ( node.isMesh ) {
-        //                 const s = node.material.userData.shader;
-        //                 if(s) {
-        //                     s.uniforms.time.value = performance.now() / 1000;
-        //                 }
-        //             }
-        //         });
-        //     }
-        // }
         if(child.name === "tree") {
             child.traverse( function( node ) {
                 if ( node.isMesh ) {
-                    const s = node.material.userData.shader;
-                    if(s) {
-                        s.uniforms.time.value = performance.now() / 1000;
+                    if(node.material != null) {
+                        const s = node.material.userData.shader;
+                        if(s) {
+                            s.uniforms.time.value = performance.now() / 1000;
+                        }
                     }
                 }
             });
@@ -1639,6 +1617,7 @@ function loadPredictedTree(treeType){
     
     if(predictedTreeModel !== null){
         var newTree = predictedTreeModel.clone();
+        newTree.name = "tree";
         newTree.position.set(35, -2 ,-50);
         sceneObjects.push(newTree);
         scene.add(newTree);  
