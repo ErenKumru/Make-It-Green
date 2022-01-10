@@ -28,11 +28,6 @@ export function buildTwistMaterial(amount, time, color, map ) {
         material2.userData.shader = shader;
     };
 
-    // Make sure WebGLRenderer doesnt reuse a single program
-    material2.customProgramCacheKey = function () {
-        return amount;
-    };
-
     return material2;
 }
 

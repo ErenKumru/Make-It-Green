@@ -161,64 +161,6 @@ function main(){
     controls.update();  */
     
     controls = new PointerLockControls( camera, renderer.domElement );
- 
-    
-    // const material = new THREE.ShaderMaterial({
-    //     vertexShader: vertexShader3,
-    //     fragmentShader: fragmentShader3,
-    //     uniforms:{
-    //         color1: {
-    //             value: new THREE.Color("purple")
-    //         },
-    //         color2: {
-    //             value: new THREE.Color("red")
-    //         }
-    //     }
-    // });
-
-    //Shadow material
-    // const basicCustomShaderMaterial = new THREE.ShaderMaterial({
-    //   ...BasicCustomShader,
-    //   fog: true,
-    //   lights: true,
-    //   dithering: true,
-    // });
-
-    //-----------------NEW SHADER TEST STARTS-------------------------------------------------------------------------//
-    //soil land block created via buildTwistMaterial
-    // var time = 0;
-    // var geometry = new THREE.BoxGeometry(2, 2, 2);
-    // var soilLand = new THREE.Mesh(geometry, buildTwistMaterial(5, time));
-    // soilLand.name = "soilLand";
-    // soilLand.userData.draggable = true;
-    // soilLand.castShadow = true;
-    // soilLand.receiveShadow = true;
-    // soilLand.position.y += 1;
-    // soilLand.position.z -= 3;
-    // soilLand.position.x -= 3;
-    // scene.add(soilLand);
-    // sceneObjects.push(soilLand);
-
-    // //stone cube custom phong shader parameters
-    // var Ka = new THREE.Vector3(0.53, 0.55, 0.55); //stone gray color
-    // var Kd = new THREE.Vector3(0.55, 0.55, 0.55); //stone gray light reflecting face color
-    // var Ks = new THREE.Vector3(0.6, 0.6, 0.6); //reflected light color (gray to white)
-    // var lightIntensity = new THREE.Vector4(0.4, 0.4, 0.4, 1.0);
-    // var lightPosition = new THREE.Vector4(0.0, 20000.0, 0.0, 1.0);
-    // var shininess = 25; //diffusing (unfocused)
-
-    // //stone cube block created via CustomPhongShader
-    // var angle = 0;
-    // var stoneCubeGeometry = new THREE.BoxGeometry(2, 2, 2);
-    // var stoneCube = new THREE.Mesh(stoneCubeGeometry, CustomPhongShader(Ka, Kd, Ks, lightIntensity, lightPosition, shininess));
-    // stoneCube.userData.draggable = true;
-    // stoneCube.castShadow = true;
-    // stoneCube.position.y += 1;
-    // stoneCube.position.z -= 3;
-    // stoneCube.position.x += 3;
-    // scene.add(stoneCube);
-    // sceneObjects.push(stoneCube);
-    //-----------------NEW SHADER TEST ENDS---------------------------------------------------------------------------//
 
     // add pine tree to scene
     /*  createPine(new THREE.Vector3( 0, 0, 0 ));
@@ -416,16 +358,6 @@ function initLights(){
     scene.add(ambientLight);
     //sceneDisplay.add(ambientLight);
     sceneObjects.push(ambientLight);
-    
-    // point light
-    // pointLight = new THREE.PointLight(0xffffff, 0.5, 120);
-    // pointLight.position.set(-3, 60, -3);
-    // pointLight.castShadow = true;
-    // pointLight.shadow.camera.near = 0.1;
-    // pointLight.shadow.camera.far = 64;
-    // scene.add(new THREE.CameraHelper(pointLight.shadow.camera)); // Help show light properties in the scene
-    // scene.add(pointLight);
-    // sceneObjects.push(pointLight);
 
     // directional light
     directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
@@ -581,19 +513,6 @@ function predictTree(temperatureInput, waterInput, humidityInput, lightInput) {
     console.log("Some prediction value is wrong. Continuing without predicting!")
     return null;
 }
-
-/* Import/Export trained model
-//To export (save) trained model for future use
-var treeJson = dt.toJSON();
-console.log("treeJson: ", treeJson);
-//Create a new model
-var treeJson = dt.toJSON();
-var preTrainedDecisionTree = new DecisionTree(treeJson);
-//Alternately, you can also import a previously trained model on an existing tree instance,
-assuming the features & class are the same:
-var treeJson = dt.toJSON();
-dt.import(treeJson);
-*/
 //-----------------DECISION TREE ENDS------------------------------------------------------------------------//
 
 //Guess system with GUI
@@ -616,11 +535,9 @@ function handlePrediction(temperatureInput, waterInput, humidityInput, lightInpu
     //Predict the tree according to given values
     predicted_class = predictTree(temperatureInput, waterInput, humidityInput, lightInput);
     
-    if (predicted_class != null) {
+    if (predicted_class != null && hasReturned) {
         handleGuess(); //Calculates points and shows right answers
 
-        //TODO: Call tree instantiation and algorithm animation function here
-        
         // Store the predicted tree model
         predictedTreeModel = loadPredictedTree(predicted_class);
         // Start the movements
@@ -664,44 +581,17 @@ function createPanel(){
 
     // OBJECT TRANSFORM
     var moveForward = { moveForward:function(){ transformOnZ(selectedObject,1); }};
-    object.add(moveForward,'moveForward').name("Move it forward");
+    object.add(moveForward,'moveForward').name("Forward");
     var moveBackward = { moveBackward:function(){ transformOnZ(selectedObject,-1); }};
-    object.add(moveBackward,'moveBackward').name("Move it backward");
-    var moveRight = { moveRight:function(){ transformOnX(selectedObject,1); }};
-    object.add(moveRight,'moveRight').name("Move it right");
+    object.add(moveBackward,'moveBackward').name("Backward");
     var moveLeft = { moveLeft:function(){ transformOnX(selectedObject,-1); }};
-    object.add(moveLeft,'moveLeft').name("Move it left");
+    object.add(moveLeft,'moveLeft').name("Left");
+    var moveRight = { moveRight:function(){ transformOnX(selectedObject,1); }};
+    object.add(moveRight,'moveRight').name("Right");
     var moveUp = { moveUp:function(){ transformOnY(selectedObject,1); }};
-    object.add(moveUp,'moveUp').name("Move it up");
+    object.add(moveUp,'moveUp').name("Up");
     var moveDown = { moveDown:function(){ transformOnY(selectedObject,-1); }};
-    object.add(moveDown,'moveDown').name("Move it down");
-
-    //Shadows
-    const shadowSettings = settings.addFolder('Shadow Settings');
-
-    //Shadow Quality
-    var q = shadowSettings.add({q: "Medium"},'q', ["Low", "Medium", "High"]).name('Shadow Quality').onChange(shadowQuality);
-    var quality;
-    function shadowQuality() {
-        if(q.object.q === "Low")  quality = 1024;
-        else if(q.object.q === "Medium") quality = 2048;
-        else if(q.object.q === "High") quality = 4096;
-
-        directionalLight.shadow.map.dispose()
-        directionalLight.shadow.map = null
-        directionalLight.shadow.mapSize.width = quality; // Shadow Quality
-        directionalLight.shadow.mapSize.height = quality; // Shadow Quality
-    }
-
-    //Turn ON and OFF directional light's Shadows (sun)
-    var toggleShadowsButton = {
-        add:function() {
-            console.log("toggleShadowsButton is clicked");
-            directionalLight.castShadow = !directionalLight.castShadow;
-            spotLight.castShadow = !spotLight.castShadow;
-        }
-    }
-    shadowSettings.add(toggleShadowsButton, 'add').name("Toggle Shadows");
+    object.add(moveDown,'moveDown').name("Down");
 
      // Spotlight Settings
     const spotlight = settings.addFolder('Spotlight');
@@ -711,7 +601,7 @@ function createPanel(){
         'Y Rotation':spotLight.target.position.y,
         'Z Rotation':spotLight.target.position.z,
     };
-    spotlight.add( spotlightSettings, 'intensity', 0, 2 ).onChange( function ( val ) {
+    spotlight.add( spotlightSettings, 'intensity', 0, 2 ).name("Intensity").onChange( function ( val ) {
         spotLight.intensity = val;
     } );
     // light on/off
@@ -735,19 +625,43 @@ function createPanel(){
     
     // transformation
     var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.x += 1; }};
-    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("x+");
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("X+");
     var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.x -= 1; }};
-    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("x-");
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("X-");
     var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.y += 1; }};
-    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("y+");
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("Y+");
     var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.y -= 1; }};
-    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("y-");
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("Y-");
     var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.z += 1; }};
-    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("z+");
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("Z+");
     var spotlightPositiveZ = { spotlightPositiveZ:function(){ spotLight.position.z -= 1; }};
-    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("z+");
-    
-    spotlight.close();
+    spotlight.add(spotlightPositiveZ,'spotlightPositiveZ').name("Z-");
+
+    //Shadows
+    const shadowSettings = settings.addFolder('Shadow Settings');
+
+    //Shadow Quality
+    var q = shadowSettings.add({q: "Medium"},'q', ["Low", "Medium", "High"]).name('Shadow Quality').onChange(shadowQuality);
+    var quality;
+    function shadowQuality() {
+        if(q.object.q === "Low")  quality = 1024;
+        else if(q.object.q === "Medium") quality = 2048;
+        else if(q.object.q === "High") quality = 4096;
+
+        directionalLight.shadow.map.dispose()
+        directionalLight.shadow.map = null
+        directionalLight.shadow.mapSize.width = quality; // Shadow Quality
+        directionalLight.shadow.mapSize.height = quality; // Shadow Quality
+    }
+
+    //Turn ON and OFF directional light's Shadows (sun)
+    var toggleShadowsButton = {
+        add:function() {
+            directionalLight.castShadow = !directionalLight.castShadow;
+            spotLight.castShadow = !spotLight.castShadow;
+        }
+    }
+    shadowSettings.add(toggleShadowsButton, 'add').name("Toggle Shadows");
 
     //Shaders
     var isDefaultMaterial = true;
@@ -755,7 +669,6 @@ function createPanel(){
     var count = 0;
     var switchShadersButton = {
         add:function() {
-            console.log("switchShadersButton is clicked");
             sceneObjects.forEach(function(obj) {
                 if(obj.name === "plane") {
                     if(isDefaultMaterial) {
@@ -774,17 +687,19 @@ function createPanel(){
                 else if(obj.name === "tree") {
                     obj.traverse( function( node ) {
                         if ( node.isMesh ) {
-                            if(isDefaultMaterial) {
-                                defaultMaterials[count] = node.material;
-                                count++;
-                                node.material = Shaders.buildTwistMaterial(
-                                    18, performance.now, node.material.color, node.material.map
-                                )
-                                twist = true;
-                            }
-                            else {
-                                node.material = defaultMaterials[count];
-                                count++;
+                            if(node.material != null) {
+                                if(isDefaultMaterial) {
+                                    defaultMaterials[count] = node.material;
+                                    count++;
+                                    node.material = Shaders.buildTwistMaterial(
+                                        18, performance.now, node.material.color, node.material.map
+                                    )
+                                    twist = true;
+                                }
+                                else {
+                                    node.material = defaultMaterials[count];
+                                    count++;
+                                }
                             }
                         }
                     });
@@ -815,6 +730,7 @@ function createPanel(){
     settings.add(switchShadersButton, 'add').name("Switch Shaders");
 
     object.close();
+    spotlight.close();
     shadowSettings.close();
     settings.close();
     //Scene settings folder ends here
@@ -844,7 +760,6 @@ function createPanel(){
     //Take inputs from UI and call when prediction button is clicked
     var predictionButton = {
         add:function(){
-            console.log("Start Prediction button clicked.");
             if(wheelbarrowFinished)
                 handlePrediction(parameters.temperature, parameters.water, parameters.humidity, parameters.light);
             // To make spotlight follow wheelbarrow
@@ -856,39 +771,18 @@ function createPanel(){
     // parameterSettings.close();
     predictionSettings.close();
     //Prediction settings folder ends here
-
-    // const cameraTilt = panel.addFolder('Camera Rotate Z');
-    // cameraTilt.add(camera.rotation,"z",0,Math.PI * 2);
-    
-   
 }
 
 function twistScene() {
     scene.traverse( function ( child ) {
-        // if ( child.isMesh ) {
-        //     if(child.name === "plane") {
-        //         const shader = child.material.userData.shader;
-        //         if ( shader ) {
-        //             shader.uniforms.time.value = performance.now() / 1000;
-        //         }
-        //     }
-        //     else if(child.name === "tree") {
-        //         child.traverse( function( node ) {
-        //             if ( node.isMesh ) {
-        //                 const s = node.material.userData.shader;
-        //                 if(s) {
-        //                     s.uniforms.time.value = performance.now() / 1000;
-        //                 }
-        //             }
-        //         });
-        //     }
-        // }
         if(child.name === "tree") {
             child.traverse( function( node ) {
                 if ( node.isMesh ) {
-                    const s = node.material.userData.shader;
-                    if(s) {
-                        s.uniforms.time.value = performance.now() / 1000;
+                    if(node.material != null) {
+                        const s = node.material.userData.shader;
+                        if(s) {
+                            s.uniforms.time.value = performance.now() / 1000;
+                        }
                     }
                 }
             });
@@ -1723,6 +1617,7 @@ function loadPredictedTree(treeType){
     
     if(predictedTreeModel !== null){
         var newTree = predictedTreeModel.clone();
+        newTree.name = "tree";
         newTree.position.set(35, -2 ,-50);
         sceneObjects.push(newTree);
         scene.add(newTree);  
@@ -1827,7 +1722,7 @@ function wheelbarrowMovement(path, directionArray){
 }
 
 var returnPathIndex = 0;
-var hasReturned = false;
+var hasReturned = true;
 function returnBase(){
     var path, directionArray;
     if(predictedTreeName === "Pine"){
