@@ -704,7 +704,7 @@ function createPanel(){
                         }
                     });
                 }
-                else if(obj.name === "fence") {
+                else if(obj.name === "sceneOBJ") {
                     obj.traverse( function( node ) {
                         if ( node.isMesh ) {
                             if(isDefaultMaterial) {
@@ -1064,7 +1064,7 @@ function fenceGLTF(){
                 node.receiveShadow = true;
             }
         });
-        mesh.name = "fence";
+        mesh.name = "sceneOBJ";
         mesh.userData.draggable = true;
         // var newMaterial = new THREE.MeshStandardMaterial({color: 0xE16D0D});
         // mesh.traverse((object) => {
@@ -1094,7 +1094,7 @@ function shedGLTF(){
                 node.receiveShadow = true;
             }
         });
-        mesh.name = "shed";
+        mesh.name = "sceneOBJ";
         mesh.userData.draggable = true;
         shedModel = mesh;
     });
@@ -1115,7 +1115,7 @@ function wheelbarrowGLTF(){
                 node.receiveShadow = true;
             }
         });
-        mesh.name = "wheelbarrow";
+        mesh.name = "sceneOBJ";
         wheelbarrowModel = mesh;
     });
 }
@@ -1137,7 +1137,7 @@ function pondGLTF(){
                 node.receiveShadow = true;
             }
         });
-        mesh.name = "pond";
+        mesh.name = "sceneOBJ";
         mesh.userData.draggable = true;
         pondModel = mesh;
     });
@@ -1160,7 +1160,7 @@ function millGLTF(){
                 node.receiveShadow = true;
             }
         });
-        mesh.name = "mill";
+        mesh.name = "sceneOBJ";
         mesh.userData.draggable = true;
         millModel = mesh;
     });
@@ -1183,7 +1183,7 @@ function sheepGLTF(){
                 node.receiveShadow = true;
             }
         });
-        mesh.name = "sheep";
+        mesh.name = "sceneOBJ";
         mesh.userData.draggable = true;
         sheepModel = mesh;
     });
@@ -1206,7 +1206,7 @@ function deerGLTF(){
                 node.receiveShadow = true;
             }
         });
-        mesh.name = "deer";
+        mesh.name = "sceneOBJ";
         mesh.userData.draggable = true;
         deerModel = mesh;
     });
@@ -1229,7 +1229,7 @@ function foxGLTF(){
                 node.receiveShadow = true;
             }
         });
-        mesh.name = "fox";
+        mesh.name = "sceneOBJ";
         mesh.userData.draggable = true;
         foxModel = mesh;
     });
