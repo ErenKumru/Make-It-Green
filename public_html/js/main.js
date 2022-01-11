@@ -876,16 +876,20 @@ function wheelbarrowGLTF(){
          // Cast and recieve shadow
         mesh.traverse( function( node ) {
             if ( node.isMesh ) {
-                node.material = new THREE.MeshToonMaterial({
-                    color: node.material.color,
-                    map: node.material.map
-                });
+                node.material = Shaders.CustomPhongShader(
+                    node.material.color,
+                    node.material.color,
+                    new THREE.Color(0x555555),
+                    new THREE.Vector4(0.6, 0.6, 0.6, 1.0),
+                    new THREE.Vector4(0, 20, 0, 1),
+                    1000
+                );
 
                 node.castShadow = true;
                 node.receiveShadow = true;
             }
         });
-        mesh.name = "sceneOBJ";
+        mesh.name = "wheelbarrow";
         wheelbarrowModel = mesh;
     });
 }
