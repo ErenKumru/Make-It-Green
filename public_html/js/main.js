@@ -1,13 +1,9 @@
 import * as THREE from '../build/three.module.js';
 import { GUI } from './jsm/libs/lil-gui.module.min.js';
-import { OBJLoader } from './jsm/loaders/OBJLoader.js';
-import { MTLLoader } from './jsm/loaders/MTLLoader.js';
 import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
-import BasicCustomShader from '../shaders/BasicCustomShader.js'
-import ShadowShader from '../shaders/ShadowShader.js';
-import { OrbitControls } from './jsm/libs/OrbitControls.js';
 import { PointerLockControls } from './jsm/libs/PointerLockControls.js';
 import * as Shaders from "../shaders/Shaders";
+
 
 //Enable camera rotation with R button
 //Move camera right-left, forward-backward with arrow or WASD keys
@@ -20,17 +16,12 @@ let moveRight = false;
 let moveUp = false;
 let moveDown = false;
 
-let prevTime = performance.now();
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
-const vertex = new THREE.Vector3();
 
 var camera, scene, renderer, controls;
 var raycaster, clickMouse, mouseMove, draggable, selectedObject;
-var keyboard={};
-var cameraMovementSpeed = 0.1;
-var pointLight,ambientLight,spotLight,light1,light1Helper, directionalLight;
-var currentlyDisplayingTree;
+var ambientLight, spotLight, directionalLight;
 
 // Loading manager
 var loadingManager = null;
@@ -73,12 +64,12 @@ var wheelbarrowFinished = true;
 
 // previous predicted tree
 var previousTree = null;
+
 function main(){
      
     // SCENES
     scene = new THREE.Scene();
-       
-    
+
     //LIGHTS
     initLights();
     
@@ -98,12 +89,6 @@ function main(){
             // add models to the scene
             onResourcesLoaded();
     };
-    
-    // LOAD MODELS 
-    //loadModels();
-    //console.log(cactusModel);
-    //sceneDisplay.add(camera);  
-    //displayCactus(new THREE.Vector3( 1, -1, -1 ));
     
     //RAYCAST
     raycaster = new THREE.Raycaster();
@@ -128,12 +113,6 @@ function main(){
             draggable = found[0].object.parent;
             selectedObject = found[0].object.parent;
         }
-        /*if(found.length > 0 && found[0].object.userData.draggable){
-            console.log(found[0].object.position);
-            draggable = found[0].object;
-            selectedObject = found[0].object;
-            console.log("found draggable " + draggable.userData.name); 
-        } */
     });
     window.addEventListener('mousemove', event => {
         mouseMove.x = ( event.clientX / window.innerWidth ) * 2 - 1;
@@ -158,48 +137,12 @@ function main(){
     // Input Panel
     createPanel();
     
-  /*  const controls = new OrbitControls( camera, renderer.domElement );
-				controls.maxPolarAngle = 0.9 * Math.PI / 2;
-				controls.enableZoom = true;
-    
-    controls.update();  */
-    
     controls = new PointerLockControls( camera, renderer.domElement );
 
-    // add pine tree to scene
-    /*  createPine(new THREE.Vector3( 0, 0, 0 ));
-    
-    // add cactus to scene
-    createCactus(new THREE.Vector3( 1, 0, -1 ));
-    createAppleTree(new THREE.Vector3( 1, 0, -2 ));
-    createPoplarTree(new THREE.Vector3( 1, 0, -2 ));  */
-    
-  /*  appleTreeGLTF(new THREE.Vector3( -5, 0, 2 ));
-    poplarTreeGLTF(new THREE.Vector3( -2, 0, 2 ));
-    pineTreeGLTF(new THREE.Vector3( 2, 0, 2 ));
-    cactusGLTF(new THREE.Vector3( 2, 0, 2 )); */
-    
     // PLANE
     createPlanes();
-    /*const geometry_plane = new THREE.PlaneBufferGeometry(40, 40, 20, 20);
-    const material_plane = new THREE.MeshStandardMaterial({
-        color: new THREE.Color("green"),
-    });
-    const plane = new THREE.Mesh(geometry_plane, material_plane);
-    plane.material.needsUpdate = true; 
-    plane.rotation.x = -Math.PI / 2;
-    plane.position.y = 0;
-    plane.receiveShadow = true;
-    plane.castShadow = true;
-    plane.userData.draggable = false;
-    plane.userData.ground = true;
-    scene.add(plane);
-    sceneObjects.push(plane); */
-
 
     var animate = function () {
-		
-
         setSpotlightTarget();
         cameraControls();
 
@@ -226,33 +169,13 @@ function main(){
         animalMovement(fox1,[new THREE.Vector3(4, 0, 0),new THREE.Vector3(20, 0, 0), new THREE.Vector3(20, 0, 15),new THREE.Vector3(5, 0, 15)], 
                 [new THREE.Vector3(1, 0, 0),new THREE.Vector3(1, 0, 0),new THREE.Vector3(0, 0, 1),new THREE.Vector3(-1, 0, 0)]);
                        
-    /*    if(moveRight){
-            camera.position.x += 1.0;
-        }
-        if(moveLeft){
-            camera.position.x -= 1.0;
-        }
-        if(moveForward){
-            camera.position.z -= 1.0;
-        }
-        if(moveBackward){
-            camera.position.z += 1.0;
-        }
-        if(moveUp){
-            camera.position.y += 1.0;
-        }
-        if(moveDown){
-            camera.position.y -= 1.0;
-        } */
+
         requestAnimationFrame( animate );
         render();
-
     };
 
     function render() {
-
         renderer.render( scene, camera );
-
     }
 
     animate();
@@ -799,147 +722,6 @@ function intersect(pos) {
   return raycaster.intersectObjects(sceneObjects, true);
 }
 
-function dragObject(){
-    if(draggable != null){
-       
-        const found = intersect(mouseMove);
-        if(found.length > 0){
-            for( let o of found){
-                if(o.object.userData.ground){
-                    continue;
-                }
-                draggable.position.x = o.point.x;
-                draggable.position.z = o.point.z;
-            }
-        }
-    }
-}
-
-
-function createCactus(position) {
-    const objLoader = new OBJLoader();
-    var mtlLoader = new MTLLoader();
-    mtlLoader.load("./models/cactus/cactus.mtl", function(materials){
-        materials.preload();
-        var objLoader = new OBJLoader();
-        objLoader.setMaterials(materials);
-        
-        objLoader.load("./models/cactus/cactus.obj", function(mesh){       
-            //scene.add(mesh);
-            mesh.traverse( function (child){
-                if ( child instanceof THREE.Mesh ){
-                    child.geometry.scale( 2, 2, 2 );
-                     // set position
-                    child.position.x = position.x;
-                    child.position.y = position.y;
-                    child.position.z = position.z;
-                    
-                    child.userData.draggable = true;
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                    scene.add(child);
-                    sceneObjects.push(child);
-                }
-                    
-            });
-        });
-    }); 
-}
-
-function createPine(position) {
-    const objLoader = new OBJLoader();
-    var mtlLoader = new MTLLoader();
-    mtlLoader.load("./models/pine/pine.mtl", function(materials){
-        materials.preload();
-        var objLoader = new OBJLoader();
-        objLoader.setMaterials(materials);
-        
-        objLoader.load("./models/pine/pine.obj", function(mesh){       
-            //scene.add(mesh);
-            mesh.traverse( function (child){
-                if ( child instanceof THREE.Mesh ){
-                    // set position
-                    child.position.x = position.x;
-                    child.position.y = position.y;
-                    child.position.z = position.z;
-                    
-                    // draggable object
-                    child.userData.draggable = true;
-                    
-                    // shadows
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                    scene.add(child);
-                    sceneObjects.push(child);
-                }       
-            });
-        });
-    }); 
-}
-function createAppleTree(position) {
-   const objLoader = new OBJLoader();
-    var mtlLoader = new MTLLoader();
-    mtlLoader.load("./models/apple_tree/AppleTree3.mtl", function(materials){
-        materials.preload();
-        var objLoader = new OBJLoader();
-        objLoader.setMaterials(materials);
-        
-        objLoader.load("./models/apple_tree/AppleTree3.obj", function(mesh){       
-            //scene.add(mesh);
-            mesh.traverse( function (child){
-                if ( child instanceof THREE.Mesh ){
-                    // set position
-                    child.position.x = position.x;
-                    child.position.y = position.y;
-                    child.position.z = position.z;
-                    
-                    // draggable object
-                    child.userData.draggable = true;
-                    
-                    // shadows
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                    scene.add(child);
-                    sceneObjects.push(child);
-                }
-                    
-            });
-        });
-    }); 
-}
-function createPoplarTree(position) {
-    const objLoader = new OBJLoader();
-    var mtlLoader = new MTLLoader();
-    mtlLoader.load("./models/white_poplar_tree/poplar_tree.mtl", function(materials){
-        materials.preload();
-        var objLoader = new OBJLoader();
-        objLoader.setMaterials(materials);
-           
-        objLoader.load("./models/white_poplar_tree/poplar_tree.obj", function(mesh){    
-            //scene.add(mesh);
-            mesh.traverse( function (child){
-                if ( child instanceof THREE.Mesh ){
-                    // set position
-                    child.position.x = position.x;
-                    child.position.y = position.y;
-                    child.position.z = position.z;
-                    
-                    // draggable object
-                    child.userData.draggable = true;
-                    
-                    // shadows
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                    scene.add(child);
-                    sceneObjects.push(child);
-                }
-                    
-            });
-        });
-     
-    }); 
-}
-
 // GLTF LOAD FUNCTIONS
 function appleTreeGLTF(){
     const loader = new GLTFLoader(loadingManager);
@@ -962,12 +744,9 @@ function appleTreeGLTF(){
         mesh.name = "tree";
         mesh.children[0].userData.draggable = true;
         appleTreeModel = mesh;
-    /*    mesh.position.set(position.x, position.y, position.z);
-        sceneObjects.push(mesh);
-        scene.add(mesh);
-        console.log(mesh);*/
     });
 }
+
 function poplarTreeGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/white_poplar_tree/poplar_tree.gltf', function(gltf){
@@ -990,12 +769,9 @@ function poplarTreeGLTF(){
         mesh.children[0].userData.draggable = true;
         //mesh.rotation.y = 1.0;        // to make it look better;
         poplarTreeModel = mesh;
-    /*    mesh.position.set(position.x, position.y, position.z);
-        sceneObjects.push(mesh);
-        scene.add(mesh);
-        console.log(mesh); */
     });
 }
+
 function pineTreeGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/pine/pine.gltf', function(gltf){
@@ -1017,12 +793,9 @@ function pineTreeGLTF(){
         mesh.name = "tree";
         mesh.children[0].userData.draggable = true;
         pineTreeModel = mesh;
-    /*    mesh.position.set(position.x, position.y, position.z);
-        sceneObjects.push(mesh);
-        scene.add(mesh);
-        console.log(mesh); */
     });
 }
+
 function cactusGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/cactus/cactus.gltf', function(gltf){
@@ -1044,13 +817,10 @@ function cactusGLTF(){
         mesh.name = "tree";
         mesh.children[0].userData.draggable = true;
         cactusModel = mesh;
-    /*    mesh.position.set(position.x, position.y, position.z);
-        sceneObjects.push(mesh);
-        scene.add(mesh);
-        console.log(mesh); */
     });
     
 }
+
 function fenceGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/fence/fence.gltf', function(gltf){
@@ -1070,15 +840,10 @@ function fenceGLTF(){
         });
         mesh.name = "sceneOBJ";
         mesh.userData.draggable = true;
-        // var newMaterial = new THREE.MeshStandardMaterial({color: 0xE16D0D});
-        // mesh.traverse((object) => {
-        //     if(object.isMesh){
-        //         object.material = newMaterial;
-        //     }
-        // });
         fenceModel = mesh;
     });
 }
+
 function shedGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/shed/shed.gltf', function(gltf){
@@ -1103,6 +868,7 @@ function shedGLTF(){
         shedModel = mesh;
     });
 }
+
 function wheelbarrowGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/wheelbarrow/wheelbarrow.gltf', function(gltf){
@@ -1123,6 +889,7 @@ function wheelbarrowGLTF(){
         wheelbarrowModel = mesh;
     });
 }
+
 function pondGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/pond/pond.gltf', function(gltf){
@@ -1146,6 +913,7 @@ function pondGLTF(){
         pondModel = mesh;
     });
 }
+
 function millGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/mill/mill.gltf', function(gltf){
@@ -1169,6 +937,7 @@ function millGLTF(){
         millModel = mesh;
     });
 }
+
 function sheepGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/sheep/sheep.gltf', function(gltf){
@@ -1192,6 +961,7 @@ function sheepGLTF(){
         sheepModel = mesh;
     });
 }
+
 function deerGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/deer/deer.gltf', function(gltf){
@@ -1215,6 +985,7 @@ function deerGLTF(){
         deerModel = mesh;
     });
 }
+
 function foxGLTF(){
     const loader = new GLTFLoader(loadingManager);
     loader.load('./models/fox/fox.gltf', function(gltf){
@@ -1238,6 +1009,7 @@ function foxGLTF(){
         foxModel = mesh;
     });
 }
+
 function rotateAboutXAxis(object, rad){
     if(object != null){
         object.traverse( function (child){
@@ -1247,6 +1019,7 @@ function rotateAboutXAxis(object, rad){
         }); 
    }
 }
+
 function rotateAboutYAxis(object, rad){
     if(object != null){
         object.traverse( function (child){
@@ -1256,6 +1029,7 @@ function rotateAboutYAxis(object, rad){
         });
     } 
 }
+
 function rotateAboutZAxis(object, rad){
     if(object != null){
         object.traverse( function (child){
@@ -1268,35 +1042,21 @@ function rotateAboutZAxis(object, rad){
 
 function transformOnX(object, amount){
     if(object != null && object.userData.draggable){
-        /*object.traverse( function (child){
-            if ( child instanceof THREE.Mesh ){
-               child.position.x += amount;
-            }
-        }); */
         object.position.x += amount;
    }
 }
+
 function transformOnY(object, amount){
     if(object != null && object.userData.draggable){
-        /*object.traverse( function (child){
-            if ( child instanceof THREE.Mesh ){
-                 child.position.y += amount;
-            }
-        }); */
         object.position.y += amount;
     } 
 }
+
 function transformOnZ(object, amount){
     if(object != null && object.userData.draggable){
-        /*object.traverse( function (child){
-            if ( child instanceof THREE.Mesh ){
-                child.position.z += amount;
-            }
-        }); */
         object.position.z += amount;
     }  
 }
-
 
 function cameraControls(){
     const delta = 0.005;
@@ -1315,6 +1075,7 @@ function cameraControls(){
     controls.moveForward( - velocity.z * delta );
 
 }
+
 function loadModels(){
     appleTreeGLTF();
     poplarTreeGLTF();
@@ -1338,6 +1099,7 @@ function addCactus(position){
     sceneObjects.push(newCactus);
     scene.add(newCactus); 
 }
+
 function addAppleTree(position){
     var newAppleTree = appleTreeModel.clone();
     newAppleTree.position.set(position.x, position.y, position.z);
@@ -1346,6 +1108,7 @@ function addAppleTree(position){
     sceneObjects.push(newAppleTree);
     scene.add(newAppleTree); 
 }
+
 function addPoplarTree(position){
     var newPoplarTree = poplarTreeModel.clone();
     newPoplarTree.position.set(position.x, position.y, position.z);
@@ -1354,6 +1117,7 @@ function addPoplarTree(position){
     sceneObjects.push(newPoplarTree);
     scene.add(newPoplarTree); 
 }
+
 function addPineTree(position){
     var newPineTree = pineTreeModel.clone();
     newPineTree.position.set(position.x, position.y, position.z);
@@ -1402,6 +1166,7 @@ function addMill(position){
     sceneObjects.push(mill);
     scene.add(mill); 
 }
+
 function addSheep(position, rotation){
     var sheep = sheepModel.clone();
     sheep.rotation.y = rotation;
@@ -1414,6 +1179,7 @@ function addSheep(position, rotation){
     scene.add(sheep); 
     return sheep;
 }
+
 function addDeer(position, rotation){
     var deer = deerModel.clone();
     deer.rotation.y = rotation;
@@ -1426,6 +1192,7 @@ function addDeer(position, rotation){
     scene.add(deer); 
     return deer;
 }
+
 function addFox(position, rotation){
     var fox = foxModel.clone();
     fox.rotation.y = rotation;
@@ -1438,6 +1205,7 @@ function addFox(position, rotation){
     scene.add(fox); 
     return fox;
 }
+
 function onResourcesLoaded(){ 
     //APPLE TREES
     addAppleTree(new THREE.Vector3( -20, 0, -35 ));
@@ -1627,9 +1395,7 @@ function loadPredictedTree(treeType){
         sceneObjects.push(newTree);
         scene.add(newTree);  
         return newTree;
-    }  
-  
-   
+    }
 }
 
 function spanPredictedTree(treeObject){
@@ -1798,8 +1564,6 @@ function returnBase(){
     }
 }
 
-
-
 function animalMovement(sheep,path,directionArray){
     if(sheep === null){
         return;
@@ -1873,16 +1637,9 @@ function animalMovement(sheep,path,directionArray){
     } 
 }
 
- 
-
 function setSpotlightTarget(){
     if(changeSpotlightTarget === false){
         if(wheelbarrow !== null){
-           /* wheelbarrow.traverse( function (child){
-                if ( child instanceof THREE.Mesh ){
-                    spotLight.target = child;
-                }   
-            }); */
             // Get world position of wheelbarrow
             var wheelbarrowPosition =  new THREE.Vector3();
             wheelbarrow.getWorldPosition(wheelbarrowPosition);
@@ -1908,6 +1665,7 @@ function rotateWheelbarrow(directionVector){
         wheelbarrow.rotation.y = 3*Math.PI/2;
     }
 }
+
 function rotateAnimal(sheep,directionVector){
 
     if(directionVector.x === 1){
@@ -1923,11 +1681,13 @@ function rotateAnimal(sheep,directionVector){
         sheep.rotation.y = Math.PI;
     }
 }
+
 THREE.Object3D.prototype.deepClone = function ( recursive ) {
 
     return new this.constructor().deepCopy( this, recursive );
 
-},
+}
+
 THREE.Object3D.prototype.deepCopy = function( source, recursive ) {
 
         if ( recursive === undefined ) recursive = true;
@@ -1974,8 +1734,7 @@ THREE.Object3D.prototype.deepCopy = function( source, recursive ) {
             }
 
         }
-
         return this;
-
     }
+
 main();		
