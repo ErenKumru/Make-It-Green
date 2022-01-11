@@ -265,9 +265,9 @@ total cycle: ~90 seconds in real life
  */
 function dayAndNightCycle() {
     var timePassed = performance.now() / 15000;
-    directionalLight.position.y = Math.sin(timePassed) * 30;
-    directionalLight.position.x = Math.cos(timePassed) * 30 - directionalLight.position.y;
-    directionalLight.position.z = Math.cos(timePassed) * 30;
+    directionalLight.position.y = Math.sin(timePassed) * 50;
+    directionalLight.position.x = Math.cos(timePassed) * 50 - directionalLight.position.y;
+    directionalLight.position.z = Math.cos(timePassed) * 50;
     directionalLight.intensity = Math.max(Math.sin(timePassed), 0);
     if(directionalLight.position.y <= 0) directionalLight.intensity = 0;
 }
@@ -365,14 +365,14 @@ function initLights(){
 
     // directional light
     directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(-3, 20, -3);
+    directionalLight.position.set(-3, 25, -3);
     directionalLight.castShadow = true;
     directionalLight.shadow.camera.near = 0.1;
-    directionalLight.shadow.camera.far = 64;
-    directionalLight.shadow.camera.top += 80;
-    directionalLight.shadow.camera.bottom -= 80;
-    directionalLight.shadow.camera.right += 80;
-    directionalLight.shadow.camera.left -= 80;
+    directionalLight.shadow.camera.far = 200;
+    directionalLight.shadow.camera.top += 60;
+    directionalLight.shadow.camera.bottom -= 60;
+    directionalLight.shadow.camera.right += 60;
+    directionalLight.shadow.camera.left -= 60;
     directionalLight.shadow.mapSize.width = 2048; // Shadow Quality
     directionalLight.shadow.mapSize.height = 2048; // Shadow Quality
     directionalLight.shadow.bias = 0.0001;
