@@ -299,7 +299,7 @@ function initLights(){
     directionalLight.shadow.mapSize.width = 2048; // Shadow Quality
     directionalLight.shadow.mapSize.height = 2048; // Shadow Quality
     directionalLight.shadow.bias = 0.0001;
-    scene.add(new THREE.CameraHelper(directionalLight.shadow.camera)); // Help show light properties in the scene
+    // scene.add(new THREE.CameraHelper(directionalLight.shadow.camera)); // Help show light properties in the scene
     scene.add(directionalLight);
     sceneObjects.push(directionalLight);
     
@@ -311,7 +311,7 @@ function initLights(){
     spotLight.angle = Math.PI / 18 ;
     spotLight.shadow.mapSize.width = 2048; // Shadow Quality
     spotLight.shadow.mapSize.height = 2048; // Shadow Quality
-    scene.add(new THREE.CameraHelper(spotLight.shadow.camera)); // Help show light properties in the scene
+    // scene.add(new THREE.CameraHelper(spotLight.shadow.camera)); // Help show light properties in the scene
     //scene.add(spotLight.target);
     scene.add(spotLight);
     scene.add(spotLight.target);
