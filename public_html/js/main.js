@@ -758,7 +758,7 @@ function createPanel(){
 
     //Guess and points
     guess = predictionSettings.add({guess: "None"},'guess',["None", "Pine", "Apple", "Cactus", "Poplar"]).name('Your Guess');
-    answer = predictionSettings.add({answer: ""},'answer' ).name('Right Answer').listen().disable();
+    answer = predictionSettings.add({answer: ""},'answer' ).name('Correct Answer').listen().disable();
     pointsGUI = predictionSettings.add({points: 0},'points' ).name('Points Earned').listen().disable();
 
     //Take inputs from UI and call when prediction button is clicked
