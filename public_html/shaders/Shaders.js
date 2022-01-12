@@ -5,7 +5,6 @@ import * as THREE from "../build/three.module";
 //time = variant of the motion (time passed is a consistent landslide like, Math.random() is a earthquake like)
 export function buildTwistMaterial(amount, time, color, map ) {
     const material2 = new THREE.MeshPhongMaterial({
-        // color: new THREE.Color(0x743E0C) //soil color
         color: color,
         map: map
     });
