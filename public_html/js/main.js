@@ -1298,7 +1298,7 @@ function createPlanes(){
     soilTexture.wrapT = THREE.RepeatWrapping;
     soilTexture.repeat.set( 4, 4 );
     // Snow
-    const snowTexture = textureLoader.load('./textures/snow.webp' );
+    const snowTexture = textureLoader.load('./textures/snow.jpg' );
     snowTexture.wrapS = THREE.RepeatWrapping;
     snowTexture.wrapT = THREE.RepeatWrapping;
     snowTexture.repeat.set( 4, 4 );
