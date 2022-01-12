@@ -1423,7 +1423,7 @@ function loadPredictedTree(treeType){
         //var newTree = predictedTreeModel.clone();
         var newTree = predictedTreeModel.deepClone();
         newTree.name = "tree";
-        newTree.position.set(35, -2 ,-50); 
+        newTree.position.set(35, -5 ,-50); 
         sceneObjects.push(newTree);
         scene.add(newTree);  
         return newTree;
@@ -1451,21 +1451,25 @@ function spanPredictedTree(treeObject){
         }
         else{
             if(predictedTreeName === "Pine"){
+                treeObject.userData.draggable = true;
                 treeObject.userData.name = "pine";
                 wheelbarrowMovement([new THREE.Vector3(35,0,-45), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20)],
                                [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0)]);
             }
             if(predictedTreeName === "Apple"){
+                treeObject.userData.draggable = true;
                 treeObject.userData.name = "apple";
                 wheelbarrowMovement([new THREE.Vector3(35,0,-45), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20), new THREE.Vector3(-20,0,-20)],
                                [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0),new THREE.Vector3(-1,0,0)]);
             }
             if(predictedTreeName === "Cactus"){
+                treeObject.userData.draggable = true;
                 treeObject.userData.name = "Cactus";
                 wheelbarrowMovement([new THREE.Vector3(35,0,-45), new THREE.Vector3(35,0,-20), new THREE.Vector3(20,0,-20), new THREE.Vector3(-20,0,-20), new THREE.Vector3(-20,0,20)],
                                [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0),new THREE.Vector3(-1,0,0),new THREE.Vector3(0,0,1)]);
             }
             if(predictedTreeName === "Poplar"){
+                treeObject.userData.draggable = true;
                 treeObject.userData.name = "Poplar";
                 wheelbarrowMovement([new THREE.Vector3(35,0,-45), new THREE.Vector3(35,0,-20),new THREE.Vector3(35,0,20),new THREE.Vector3(20,0,20)],
                                [new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0)]);
