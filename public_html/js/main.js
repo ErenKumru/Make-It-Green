@@ -1290,10 +1290,34 @@ function onResourcesLoaded(){
 }
 
 function createPlanes(){
+    // TEXTURES
+    const textureLoader = new THREE.TextureLoader();
+    // Soil
+    const soilTexture = textureLoader.load('./textures/soil.jpg' );
+    soilTexture.wrapS = THREE.RepeatWrapping;
+    soilTexture.wrapT = THREE.RepeatWrapping;
+    soilTexture.repeat.set( 4, 4 );
+    // Snow
+    const snowTexture = textureLoader.load('./textures/snow.webp' );
+    snowTexture.wrapS = THREE.RepeatWrapping;
+    snowTexture.wrapT = THREE.RepeatWrapping;
+    snowTexture.repeat.set( 4, 4 );
+    // Dry Soil
+    const drySoilTexture = textureLoader.load('./textures/dry_soil.jpg' );
+    drySoilTexture.wrapS = THREE.RepeatWrapping;
+    drySoilTexture.wrapT = THREE.RepeatWrapping;
+    drySoilTexture.repeat.set( 4, 4 );
+    // Grass
+    const grassTexture = textureLoader.load('./textures/grass.jpg' );
+    grassTexture.wrapS = THREE.RepeatWrapping;
+    grassTexture.wrapT = THREE.RepeatWrapping;
+    grassTexture.repeat.set( 4, 4 );
+    
     // PLANE 1
     const geometry_plane = new THREE.PlaneBufferGeometry(40, 40, 20, 20);
     const material_plane1 = new THREE.MeshToonMaterial({
         color: new THREE.Color(0x0D2903),
+        map: grassTexture
     });
     const plane1 = new THREE.Mesh(geometry_plane, material_plane1);
     plane1.name = "plane";
@@ -1311,6 +1335,7 @@ function createPlanes(){
     // PLANE 2
     const material_plane2 = new THREE.MeshToonMaterial({
         color: new THREE.Color("white"),
+        map: snowTexture,
     });
     const plane2 = new THREE.Mesh(geometry_plane, material_plane2);
     plane2.name = "plane";
@@ -1328,6 +1353,7 @@ function createPlanes(){
     // PLANE 3
     const material_plane3 = new THREE.MeshToonMaterial({
         color: new THREE.Color(0xF8C471),
+        map: drySoilTexture
     });
     const plane3 = new THREE.Mesh(geometry_plane, material_plane3);
     plane3.name = "plane";
@@ -1345,6 +1371,7 @@ function createPlanes(){
      // PLANE 4
     const material_plane4 = new THREE.MeshToonMaterial({
         color: new THREE.Color("green"),
+        map: grassTexture
     });
     const plane4 = new THREE.Mesh(geometry_plane, material_plane4);
     plane4.name = "plane";
@@ -1363,6 +1390,7 @@ function createPlanes(){
     const geometry_plane5 = new THREE.PlaneBufferGeometry(1000, 1000, 20, 20);
     const material_plane5 = new THREE.MeshToonMaterial({
         color: new THREE.Color(0x442903),
+        map: soilTexture
     });
     const plane5 = new THREE.Mesh(geometry_plane5, material_plane5);
     plane5.name = "plane";
