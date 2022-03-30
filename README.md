@@ -1,4 +1,4 @@
-# Make-It-Green
+# Make It Green
 Hacettepe University - BBM412 Computer Graphics course term project Developed by [Eren Kumru](https://github.com/ErenKumru) & [Başak Çontu](https://github.com/basak-contu)
 
 ## About
